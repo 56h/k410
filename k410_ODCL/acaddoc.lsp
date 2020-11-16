@@ -1,0 +1,1 @@
+(load "k410odcl.lsp")
