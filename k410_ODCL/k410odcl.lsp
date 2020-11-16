@@ -3,1778 +3,1781 @@
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
-;Расширенная информация хранится в атрибутах описания блока.
-;Описание блока содержит следующие атрибуты:
-; * K410_ODCL_UDLFILE - полное имя (включая путь) файла UDL источника данных;
-; * K410_ODCL_TABLENAME - имя таблицы источника данных;
-; * K410_ODCL_KEYFIELDNAME - имя ключевого поля;
-; * K410_ODCL_ATTRNAME_1 ... K410_ODCL_ATTRNAME_N - соответствие атрибуту блока
-;												поля таблицы источника данных
-;Атрибуты невидимые (Invisible = T), постоянные (Constant = T) и с позицией
-;фиксации (LockPosition = T).
+;Р Р°СЃС€РёСЂРµРЅРЅР°СЏ РёРЅС„РѕСЂРјР°С†РёСЏ С…СЂР°РЅРёС‚СЃСЏ РІ Р°С‚СЂРёР±СѓС‚Р°С… РѕРїРёСЃР°РЅРёСЏ Р±Р»РѕРєР°.
+;РћРїРёСЃР°РЅРёРµ Р±Р»РѕРєР° СЃРѕРґРµСЂР¶РёС‚ СЃР»РµРґСѓСЋС‰РёРµ Р°С‚СЂРёР±СѓС‚С‹:
+; * K410_ODCL_UDLFILE - РїРѕР»РЅРѕРµ РёРјСЏ (РІРєР»СЋС‡Р°СЏ РїСѓС‚СЊ) С„Р°Р№Р»Р° UDL РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…;
+; * K410_ODCL_TABLENAME - РёРјСЏ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…;
+; * K410_ODCL_KEYFIELDNAME - РёРјСЏ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ;
+; * K410_ODCL_ATTRNAME_1 ... K410_ODCL_ATTRNAME_N - СЃРѕРѕС‚РІРµС‚СЃС‚РІРёРµ Р°С‚СЂРёР±СѓС‚Сѓ Р±Р»РѕРєР°
+;                                                   РїРѕР»СЏ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+;РђС‚СЂРёР±СѓС‚С‹ РЅРµРІРёРґРёРјС‹Рµ (Invisible = T), РїРѕСЃС‚РѕСЏРЅРЅС‹Рµ (Constant = T) Рё СЃ РїРѕР·РёС†РёРµР№
+;С„РёРєСЃР°С†РёРё (LockPosition = T).
 ;
-; * K410_ODCL_KEYFIELDVALUE - 	значение ключевого поля таблицы источника данных
-;								для выбранного вхождения.
-;Атрибут невидимый (Invisible = T) и с позицией фиксации (LockPosition = T).
+; * K410_ODCL_KEYFIELDVALUE - Р·РЅР°С‡РµРЅРёРµ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+;                             РґР»СЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ РІС…РѕР¶РґРµРЅРёСЏ.
+;РђС‚СЂРёР±СѓС‚ РЅРµРІРёРґРёРјС‹Р№ (Invisible = T) Рё СЃ РїРѕР·РёС†РёРµР№ С„РёРєСЃР°С†РёРё (LockPosition = T).
 ;-------------------------------------------------------------------------------
 (setq k410_Ver "\nk410-ODCL Ver.0.06.12.07.20\n")
 (princ k410_Ver)
-;Загрузка расширения AciveX ACAD-a
+;Р—Р°РіСЂСѓР·РєР° СЂР°СЃС€РёСЂРµРЅРёСЏ AciveX ACAD-a
 (vl-load-com)
-;Загрузка расширения ADOLisp
+;Р—Р°РіСЂСѓР·РєР° СЂР°СЃС€РёСЂРµРЅРёСЏ ADOLisp
 (load "ADOLISP_Library.lsp")
-;Загрузка проекта
+;Р—Р°РіСЂСѓР·РєР° РїСЂРѕРµРєС‚Р°
 (command "OPENDCL")
 (dcl_Project_Load "k410odcl" T)
 
-;------------------------------------------------------ Глобальные переменные --
+;------------------------------------------------------ Р“Р»РѕР±Р°Р»СЊРЅС‹Рµ РїРµСЂРµРјРµРЅРЅС‹Рµ --
 (setq
-; - указатель приложения
-		ACADApp (vlax-get-acad-object)
-; - указатель на активный документ
-		ActiveDoc (vla-get-ActiveDocument ACADApp)
-; - полное имя файла источника данных:
-		TagUDLFile ""
-; - имя таблицы источника данных:
-		TagTableName ""
-; - ключевое поле таблицы источника данных:
-		TagKeyFieldName ""
-; - значение ключевого поля таблицы источника данных:
-		TagKeyFieldValue ""
-; - атрибут значения ключевого поля таблицы источника данных:
-		AttrRefKeyFieldValue nil
-; - указатель на текущее описание блока:
-		CurBlock nil
-; - указатель на текущее вхождение блока:
-		CurBlockRef nil
-; - список ссылок на постоянные атрибуты блока:
-		ConstAttrRefList nil
-; - список постоянных атрибутов блока:
-		ConstAttrList nil
-; - спсиок ссылок на видимые атрибуты блока:
-		AttrRefList nil
-; - список видимых атибутов блока:
-		AttrList nil
-; - список полей таблицы источника данных, соответствующих атрибутам:
-		AttrFieldsList nil
-; - наборы данных:
-		Views nil
-; - список полей таблицы текщуего источника данных:
-		CurColumnList nil
-; - текущий список значений ключевого поля:
-		CurKeyValueList nil
-; - текущий набор данных:
-		CurRecordSet nil
-; - флаг обновления данных:
-		ReloadDataFlag F
-; - флаг создания новых атрибутов:		
-		NewAttrFlag F
-; - индекс элемента обновления:
-		ItemIndex 0
-; - флаг диалога обновления:
-		ReloadFlag 0
-; - список значений ключей:
-		KeyValues nil
-; - строка значений ключей:
-		KeyValuesStr ""
-; - разделитель между значениями ключей в строке значений ключей:
-		StrDelimiter ", "
-; - флаг сброса списка и строки значений:
-		KeyValuesClear T
-;------------------------------------------------------ Глобальные переменные --
+; - СѓРєР°Р·Р°С‚РµР»СЊ РїСЂРёР»РѕР¶РµРЅРёСЏ
+        ACADApp (vlax-get-acad-object)
+; - СѓРєР°Р·Р°С‚РµР»СЊ РЅР° Р°РєС‚РёРІРЅС‹Р№ РґРѕРєСѓРјРµРЅС‚
+        ActiveDoc (vla-get-ActiveDocument ACADApp)
+; - РїРѕР»РЅРѕРµ РёРјСЏ С„Р°Р№Р»Р° РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…:
+        TagUDLFile ""
+; - РёРјСЏ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…:
+        TagTableName ""
+; - РєР»СЋС‡РµРІРѕРµ РїРѕР»Рµ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…:
+        TagKeyFieldName ""
+; - Р·РЅР°С‡РµРЅРёРµ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…:
+        TagKeyFieldValue ""
+; - Р°С‚СЂРёР±СѓС‚ Р·РЅР°С‡РµРЅРёСЏ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…:
+        AttrRefKeyFieldValue nil
+; - СѓРєР°Р·Р°С‚РµР»СЊ РЅР° С‚РµРєСѓС‰РµРµ РѕРїРёСЃР°РЅРёРµ Р±Р»РѕРєР°:
+        CurBlock nil
+; - СѓРєР°Р·Р°С‚РµР»СЊ РЅР° С‚РµРєСѓС‰РµРµ РІС…РѕР¶РґРµРЅРёРµ Р±Р»РѕРєР°:
+        CurBlockRef nil
+; - СЃРїРёСЃРѕРє СЃСЃС‹Р»РѕРє РЅР° РїРѕСЃС‚РѕСЏРЅРЅС‹Рµ Р°С‚СЂРёР±СѓС‚С‹ Р±Р»РѕРєР°:
+        ConstAttrRefList nil
+; - СЃРїРёСЃРѕРє РїРѕСЃС‚РѕСЏРЅРЅС‹С… Р°С‚СЂРёР±СѓС‚РѕРІ Р±Р»РѕРєР°:
+        ConstAttrList nil
+; - СЃРїСЃРёРѕРє СЃСЃС‹Р»РѕРє РЅР° РІРёРґРёРјС‹Рµ Р°С‚СЂРёР±СѓС‚С‹ Р±Р»РѕРєР°:
+        AttrRefList nil
+; - СЃРїРёСЃРѕРє РІРёРґРёРјС‹С… Р°С‚РёР±СѓС‚РѕРІ Р±Р»РѕРєР°:
+        AttrList nil
+; - СЃРїРёСЃРѕРє РїРѕР»РµР№ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…, СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёС… Р°С‚СЂРёР±СѓС‚Р°Рј:
+        AttrFieldsList nil
+; - РЅР°Р±РѕСЂС‹ РґР°РЅРЅС‹С…:
+        Views nil
+; - СЃРїРёСЃРѕРє РїРѕР»РµР№ С‚Р°Р±Р»РёС†С‹ С‚РµРєС‰СѓРµРіРѕ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…:
+        CurColumnList nil
+; - С‚РµРєСѓС‰РёР№ СЃРїРёСЃРѕРє Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ:
+        CurKeyValueList nil
+; - С‚РµРєСѓС‰РёР№ РЅР°Р±РѕСЂ РґР°РЅРЅС‹С…:
+        CurRecordSet nil
+; - С„Р»Р°Рі РѕР±РЅРѕРІР»РµРЅРёСЏ РґР°РЅРЅС‹С…:
+        ReloadDataFlag F
+; - С„Р»Р°Рі СЃРѕР·РґР°РЅРёСЏ РЅРѕРІС‹С… Р°С‚СЂРёР±СѓС‚РѕРІ:        
+        NewAttrFlag F
+; - РёРЅРґРµРєСЃ СЌР»РµРјРµРЅС‚Р° РѕР±РЅРѕРІР»РµРЅРёСЏ:
+        ItemIndex 0
+; - С„Р»Р°Рі РґРёР°Р»РѕРіР° РѕР±РЅРѕРІР»РµРЅРёСЏ:
+        ReloadFlag 0
+; - СЃРїРёСЃРѕРє Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµР№:
+        KeyValues nil
+; - СЃС‚СЂРѕРєР° Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµР№:
+        KeyValuesStr ""
+; - СЂР°Р·РґРµР»РёС‚РµР»СЊ РјРµР¶РґСѓ Р·РЅР°С‡РµРЅРёСЏРјРё РєР»СЋС‡РµР№ РІ СЃС‚СЂРѕРєРµ Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµР№:
+        StrDelimiter ", "
+; - С„Р»Р°Рі СЃР±СЂРѕСЃР° СЃРїРёСЃРєР° Рё СЃС‚СЂРѕРєРё Р·РЅР°С‡РµРЅРёР№:
+        KeyValuesClear T
+;------------------------------------------------------ Р“Р»РѕР±Р°Р»СЊРЅС‹Рµ РїРµСЂРµРјРµРЅРЅС‹Рµ --
 
-;------------------------------------------------------- Переменные-константы --
-		AttrUDLFile "K410_ODCL_UDLFILE"
-		AttrTableName "K410_ODCL_TABLENAME"
-		AttrKeyFieldName "K410_ODCL_KEYFIELDNAME"
-		AttrKeyFieldValue "K410_ODCL_KEYFIELDVALUE"
-		AttrPrefix "K410_ODCL_"
+;------------------------------------------------------- РџРµСЂРµРјРµРЅРЅС‹Рµ-РєРѕРЅСЃС‚Р°РЅС‚С‹ --
+        AttrUDLFile "K410_ODCL_UDLFILE"
+        AttrTableName "K410_ODCL_TABLENAME"
+        AttrKeyFieldName "K410_ODCL_KEYFIELDNAME"
+        AttrKeyFieldValue "K410_ODCL_KEYFIELDVALUE"
+        AttrPrefix "K410_ODCL_"
 
-		FieldTXT "Выберите поле..."
-		TableViewTXT "Выберите таблицу или запрос..."
-		KeyFieldTXT "Выберите ключевое поле..."
-		KeyFieldValueTXT "Значение ключевого поля..."
-		ErrorTitleTxt "k410 ODCL - Ошибка"
-		TitleTXT "k410 ODCL - "
-		
-		ArrayWidth "10"
-		ArraydX "100"
-		ArraydY "50"
-		
-;Обновить источник данных
-		ReloadRecordSet 1
-;Обновить данные атрибутов
-		ReloadData 2
-;------------------------------------------------------- Переменные-константы --
+        FieldTXT "Р’С‹Р±РµСЂРёС‚Рµ РїРѕР»Рµ..."
+        TableViewTXT "Р’С‹Р±РµСЂРёС‚Рµ С‚Р°Р±Р»РёС†Сѓ РёР»Рё Р·Р°РїСЂРѕСЃ..."
+        KeyFieldTXT "Р’С‹Р±РµСЂРёС‚Рµ РєР»СЋС‡РµРІРѕРµ РїРѕР»Рµ..."
+        KeyFieldValueTXT "Р—РЅР°С‡РµРЅРёРµ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ..."
+        ErrorTitleTxt "k410 ODCL - РћС€РёР±РєР°"
+        TitleTXT "k410 ODCL - "
+        
+        ArrayWidth "10"
+        ArraydX "100"
+        ArraydY "50"
+        
+;РћР±РЅРѕРІРёС‚СЊ РёСЃС‚РѕС‡РЅРёРє РґР°РЅРЅС‹С…
+        ReloadRecordSet 1
+;РћР±РЅРѕРІРёС‚СЊ РґР°РЅРЅС‹Рµ Р°С‚СЂРёР±СѓС‚РѕРІ
+        ReloadData 2
+;------------------------------------------------------- РџРµСЂРµРјРµРЅРЅС‹Рµ-РєРѕРЅСЃС‚Р°РЅС‚С‹ --
 
-;------------------------------------------------------------ Перечень ошибок --
-		Error_001_TXT "Ошибка 001: Ошибка ключевого поля"
-;					ключевое поле, сохраненное в описании блока	отсутствует в 
-;					таблице источника данных
-		Error_002_TXT "Ошибка 002: Ошибка открытия UDL файла источника данных"
-;					UDL файла не найден по сохраненному пути
-		Error_003_TXT "Ошибка 003: Ошибка загрузки наборов данных"
-;					в загруженных наборах nil вместо указателя на набор, или
-;					вместо списка полей набора
-		Error_004_TXT "Ошибка 004: Ошибка значения ключевого поля"
-;					внесенное в текстовое поле значение ключевого поля 
-;					отсутствует в списке значений ключевого поля
-;		Error_005_TXT
-;------------------------------------------------------------ Перечень ошибок --
+;------------------------------------------------------------ РџРµСЂРµС‡РµРЅСЊ РѕС€РёР±РѕРє --
+        Error_001_TXT "РћС€РёР±РєР° 001: РћС€РёР±РєР° РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ"
+;                    РєР»СЋС‡РµРІРѕРµ РїРѕР»Рµ, СЃРѕС…СЂР°РЅРµРЅРЅРѕРµ РІ РѕРїРёСЃР°РЅРёРё Р±Р»РѕРєР°    РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РІ 
+;                    С‚Р°Р±Р»РёС†Рµ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+        Error_002_TXT "РћС€РёР±РєР° 002: РћС€РёР±РєР° РѕС‚РєСЂС‹С‚РёСЏ UDL С„Р°Р№Р»Р° РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…"
+;                    UDL С„Р°Р№Р»Р° РЅРµ РЅР°Р№РґРµРЅ РїРѕ СЃРѕС…СЂР°РЅРµРЅРЅРѕРјСѓ РїСѓС‚Рё
+        Error_003_TXT "РћС€РёР±РєР° 003: РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РЅР°Р±РѕСЂРѕРІ РґР°РЅРЅС‹С…"
+;                    РІ Р·Р°РіСЂСѓР¶РµРЅРЅС‹С… РЅР°Р±РѕСЂР°С… nil РІРјРµСЃС‚Рѕ СѓРєР°Р·Р°С‚РµР»СЏ РЅР° РЅР°Р±РѕСЂ, РёР»Рё
+;                    РІРјРµСЃС‚Рѕ СЃРїРёСЃРєР° РїРѕР»РµР№ РЅР°Р±РѕСЂР°
+        Error_004_TXT "РћС€РёР±РєР° 004: РћС€РёР±РєР° Р·РЅР°С‡РµРЅРёСЏ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ"
+;                    РІРЅРµСЃРµРЅРЅРѕРµ РІ С‚РµРєСЃС‚РѕРІРѕРµ РїРѕР»Рµ Р·РЅР°С‡РµРЅРёРµ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ 
+;                    РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РІ СЃРїРёСЃРєРµ Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ
+;        Error_005_TXT
+;------------------------------------------------------------ РџРµСЂРµС‡РµРЅСЊ РѕС€РёР±РѕРє --
 )
 
 
-;--------------------------------------- Команда отображения версии программы --
+;--------------------------------------- РљРѕРјР°РЅРґР° РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ РІРµСЂСЃРёРё РїСЂРѕРіСЂР°РјРјС‹ --
 (defun c:k410_Ver (/)
-	k410_Ver
-)	
-;--------------------------------------- Команда отображения версии программы --
+    k410_Ver
+)    
+;--------------------------------------- РљРѕРјР°РЅРґР° РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ РІРµСЂСЃРёРё РїСЂРѕРіСЂР°РјРјС‹ --
 
-;---------------------------------------------------- Добавление пунктов меню --
+;---------------------------------------------------- Р”РѕР±Р°РІР»РµРЅРёРµ РїСѓРЅРєС‚РѕРІ РјРµРЅСЋ --
 
-;--------------------------- Функция поиска элемента меню по имени (по Label) --
-;Вход:
-; * _Menu - меню, в котором ищется пункт;
-; * _LabelString - имя пункта меню;
-;Выход:
-; * номер элемента, если такая метка есть;
-; * nil, если такого элемента нет;
+;--------------------------- Р¤СѓРЅРєС†РёСЏ РїРѕРёСЃРєР° СЌР»РµРјРµРЅС‚Р° РјРµРЅСЋ РїРѕ РёРјРµРЅРё (РїРѕ Label) --
+;Р’С…РѕРґ:
+; * _Menu - РјРµРЅСЋ, РІ РєРѕС‚РѕСЂРѕРј РёС‰РµС‚СЃСЏ РїСѓРЅРєС‚;
+; * _LabelString - РёРјСЏ РїСѓРЅРєС‚Р° РјРµРЅСЋ;
+;Р’С‹С…РѕРґ:
+; * РЅРѕРјРµСЂ СЌР»РµРјРµРЅС‚Р°, РµСЃР»Рё С‚Р°РєР°СЏ РјРµС‚РєР° РµСЃС‚СЊ;
+; * nil, РµСЃР»Рё С‚Р°РєРѕРіРѕ СЌР»РµРјРµРЅС‚Р° РЅРµС‚;
 (defun FindSimpleLabel (_Menu
-						_LabelString /	_MenuItemCount
-										_i
-										_Result)
-;Количество элементов меню
-	(setq	_MenuItemCount (vla-Get-Count _Menu)
-;Обнуление индекса элементов меню
-			_i 0
-;Результат работы функции
-			_Result nil)
-	(repeat _MenuItemCount
-		(if (= (vla-Get-Label (vla-Item _Menu _i)) _LabelString)
-			(setq _Result _i))
-		(setq _i (1+ _i))
-	)
-;Возврат значения
-	_Result
+                        _LabelString / _MenuItemCount
+                                       _i
+                                       _Result)
+;РљРѕР»РёС‡РµСЃС‚РІРѕ СЌР»РµРјРµРЅС‚РѕРІ РјРµРЅСЋ
+    (setq _MenuItemCount (vla-Get-Count _Menu)
+;РћР±РЅСѓР»РµРЅРёРµ РёРЅРґРµРєСЃР° СЌР»РµРјРµРЅС‚РѕРІ РјРµРЅСЋ
+          _i 0
+;Р РµР·СѓР»СЊС‚Р°С‚ СЂР°Р±РѕС‚С‹ С„СѓРЅРєС†РёРё
+          _Result nil)
+    (repeat _MenuItemCount
+        (if (= (vla-Get-Label (vla-Item _Menu _i)) _LabelString)
+            (setq _Result _i))
+        (setq _i (1+ _i))
+    )
+;Р’РѕР·РІСЂР°С‚ Р·РЅР°С‡РµРЅРёСЏ
+    _Result
 )
-;--------------------------- Функция поиска элемента меню по имени (по Label) --
+;--------------------------- Р¤СѓРЅРєС†РёСЏ РїРѕРёСЃРєР° СЌР»РµРјРµРЅС‚Р° РјРµРЅСЋ РїРѕ РёРјРµРЅРё (РїРѕ Label) --
 
-;-------------------------------------------- Функция добавления пунктов меню --
-(defun AddMenuItems (	_Menu /	_Item_1
-                              	_Item_2
-								_Item_3)
-	(vla-AddSeparator _Menu 0)
+;-------------------------------------------- Р¤СѓРЅРєС†РёСЏ РґРѕР±Р°РІР»РµРЅРёСЏ РїСѓРЅРєС‚РѕРІ РјРµРЅСЋ --
+(defun AddMenuItems ( _Menu / _Item_1
+                              _Item_2
+                              _Item_3)
+    (vla-AddSeparator _Menu 0)
 
-	(setq	_Item_3 (vla-AddMenuItem _Menu 0 "Массив вхождений" "(BlockRefArray) ")
-			_Item_2 (vla-AddMenuItem _Menu 0 "Выбор записи" "(ChoiceRecord) ")
-			_Item_1 (vla-AddMenuItem _Menu 0 "Адреса данных" "(DataAddr) "))
+    (setq _Item_3 (vla-AddMenuItem _Menu 0 "РњР°СЃСЃРёРІ РІС…РѕР¶РґРµРЅРёР№" "(BlockRefArray) ")
+          _Item_2 (vla-AddMenuItem _Menu 0 "Р’С‹Р±РѕСЂ Р·Р°РїРёСЃРё" "(ChoiceRecord) ")
+          _Item_1 (vla-AddMenuItem _Menu 0 "РђРґСЂРµСЃР° РґР°РЅРЅС‹С…" "(DataAddr) "))
 
-	(if _Item_1 (vla-Put-HelpString _Item_1 "Создание или редактирование адресов данных"))
-	(if _Item_2 (vla-Put-HelpString _Item_2 "Выбор записи таблицы источника данных"))
-	(if _Item_3 (vla-Put-HelpString _Item_3 "Создание массива вхождений по всем записям источника данных"))
-	
-	(princ)
+    (if _Item_1 (vla-Put-HelpString _Item_1 "РЎРѕР·РґР°РЅРёРµ РёР»Рё СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ Р°РґСЂРµСЃРѕРІ РґР°РЅРЅС‹С…"))
+    (if _Item_2 (vla-Put-HelpString _Item_2 "Р’С‹Р±РѕСЂ Р·Р°РїРёСЃРё С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…"))
+    (if _Item_3 (vla-Put-HelpString _Item_3 "РЎРѕР·РґР°РЅРёРµ РјР°СЃСЃРёРІР° РІС…РѕР¶РґРµРЅРёР№ РїРѕ РІСЃРµРј Р·Р°РїРёСЃСЏРј РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…"))
+    
+    (princ)
 )
-;-------------------------------------------- Функция добавления пунктов меню --
-;Загрузка указателя на PopupMenu
-(setq	_MenuGroup (vla-Item (vla-Get-MenuGroups ACADApp) "ACAD")
-		_PopupMenu (vla-Item (vla-Get-Menus _MenuGroup) "Меню объектов блоков с атрибутами"))
+;-------------------------------------------- Р¤СѓРЅРєС†РёСЏ РґРѕР±Р°РІР»РµРЅРёСЏ РїСѓРЅРєС‚РѕРІ РјРµРЅСЋ --
+;Р—Р°РіСЂСѓР·РєР° СѓРєР°Р·Р°С‚РµР»СЏ РЅР° PopupMenu
+(setq _MenuGroup (vla-Item (vla-Get-MenuGroups ACADApp) "ACAD")
+      _PopupMenu (vla-Item (vla-Get-Menus _MenuGroup) "РњРµРЅСЋ РѕР±СЉРµРєС‚РѕРІ Р±Р»РѕРєРѕРІ СЃ Р°С‚СЂРёР±СѓС‚Р°РјРё"))
 
-;Добавление пунктов меню, если они не были добавлены
-(if (FindSimpleLabel _PopupMenu "Адреса данных")
+;Р”РѕР±Р°РІР»РµРЅРёРµ РїСѓРЅРєС‚РѕРІ РјРµРЅСЋ, РµСЃР»Рё РѕРЅРё РЅРµ Р±С‹Р»Рё РґРѕР±Р°РІР»РµРЅС‹
+(if (FindSimpleLabel _PopupMenu "РђРґСЂРµСЃР° РґР°РЅРЅС‹С…")
 ;then
-	(princ)
+    (princ)
 ;else
-	(AddMenuItems _PopupMenu)
+    (AddMenuItems _PopupMenu)
 )
-;---------------------------------------------------- Добавление пунктов меню --
+;---------------------------------------------------- Р”РѕР±Р°РІР»РµРЅРёРµ РїСѓРЅРєС‚РѕРІ РјРµРЅСЋ --
 
-;----------------------------------------------------------------- ODCL часть --
+;----------------------------------------------------------------- ODCL С‡Р°СЃС‚СЊ --
 
-;---------------------------- Функция отображения сообщения об ошибке ADOLISP --
-;Функци является переработкой функции ADOLISP_ErrorPrinter пакета
+;---------------------------- Р¤СѓРЅРєС†РёСЏ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ СЃРѕРѕР±С‰РµРЅРёСЏ РѕР± РѕС€РёР±РєРµ ADOLISP --
+;Р¤СѓРЅРєС†Рё СЏРІР»СЏРµС‚СЃСЏ РїРµСЂРµСЂР°Р±РѕС‚РєРѕР№ С„СѓРЅРєС†РёРё ADOLISP_ErrorPrinter РїР°РєРµС‚Р°
 ;ADOLISP_Library.lsp
 
 (defun k410_ErrorPrinter (/ _ErrorString)
-;Инициализация переменных
-	(setq _ErrorString "")
-;Формирование строки с последним запросом
-	(if ADOLISP_LastSQLStatement
-		(setq _ErrorString (strcat	"Last SQL statement:\n\""
-									ADOLISP_LastSQLStatement
-									"\"\n\n")
-		)
-	)
-;Извлечение информации об ошибке
-	(foreach ErrorList ADOLISP_ErrorList
-		(foreach ErrorItem ErrorList
-			(setq _ErrorString
-				(strcat _ErrorString (car ErrorItem) ": " (cdr ErrorItem) "\n")
-			)
-		)
-	)
-;Отображение сообщения в выпадающем окне
-	(dcl_MessageBox _ErrorString ErrorTitleTxt 2 4)
-;"Тихий" выход
-	(princ)
+;РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїРµСЂРµРјРµРЅРЅС‹С…
+    (setq _ErrorString "")
+;Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ СЃС‚СЂРѕРєРё СЃ РїРѕСЃР»РµРґРЅРёРј Р·Р°РїСЂРѕСЃРѕРј
+    (if ADOLISP_LastSQLStatement
+        (setq _ErrorString (strcat "Last SQL statement:\n\""
+                                   ADOLISP_LastSQLStatement
+                                   "\"\n\n")
+        )
+    )
+;РР·РІР»РµС‡РµРЅРёРµ РёРЅС„РѕСЂРјР°С†РёРё РѕР± РѕС€РёР±РєРµ
+    (foreach ErrorList ADOLISP_ErrorList
+        (foreach ErrorItem ErrorList
+            (setq _ErrorString
+                (strcat _ErrorString (car ErrorItem) ": " (cdr ErrorItem) "\n")
+            )
+        )
+    )
+;РћС‚РѕР±СЂР°Р¶РµРЅРёРµ СЃРѕРѕР±С‰РµРЅРёСЏ РІ РІС‹РїР°РґР°СЋС‰РµРј РѕРєРЅРµ
+    (dcl_MessageBox _ErrorString ErrorTitleTxt 2 4)
+;"РўРёС…РёР№" РІС‹С…РѕРґ
+    (princ)
 )
-;---------------------------- Функция отображения сообщения об ошибке ADOLISP --
+;---------------------------- Р¤СѓРЅРєС†РёСЏ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ СЃРѕРѕР±С‰РµРЅРёСЏ РѕР± РѕС€РёР±РєРµ ADOLISP --
 
-;------------------------------- Функция загрузки данных из источника в набор --
-;Является переработкой функции ADOLISP_DoSQL пакета ADOLISP_Library.lsp
-;Поскольку выполняем только запрос SELECT ... объект Command не применяем
-;Вход:
-; - ConnectionObject - соединение,
-; - SQLStatement - текст запроса.
-;Выход:
-; - nil - в случае путсого или ошибочного набора данных;
-; - список - ((список полей набора данных) vla-object НаборДанных)
+;------------------------------- Р¤СѓРЅРєС†РёСЏ Р·Р°РіСЂСѓР·РєРё РґР°РЅРЅС‹С… РёР· РёСЃС‚РѕС‡РЅРёРєР° РІ РЅР°Р±РѕСЂ --
+;РЇРІР»СЏРµС‚СЃСЏ РїРµСЂРµСЂР°Р±РѕС‚РєРѕР№ С„СѓРЅРєС†РёРё ADOLISP_DoSQL РїР°РєРµС‚Р° ADOLISP_Library.lsp
+;РџРѕСЃРєРѕР»СЊРєСѓ РІС‹РїРѕР»РЅСЏРµРј С‚РѕР»СЊРєРѕ Р·Р°РїСЂРѕСЃ SELECT ... РѕР±СЉРµРєС‚ Command РЅРµ РїСЂРёРјРµРЅСЏРµРј
+;Р’С…РѕРґ:
+; - ConnectionObject - СЃРѕРµРґРёРЅРµРЅРёРµ,
+; - SQLStatement - С‚РµРєСЃС‚ Р·Р°РїСЂРѕСЃР°.
+;Р’С‹С…РѕРґ:
+; - nil - РІ СЃР»СѓС‡Р°Рµ РїСѓС‚СЃРѕРіРѕ РёР»Рё РѕС€РёР±РѕС‡РЅРѕРіРѕ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С…;
+; - СЃРїРёСЃРѕРє - ((СЃРїРёСЃРѕРє РїРѕР»РµР№ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С…) vla-object РќР°Р±РѕСЂР”Р°РЅРЅС‹С…)
 
-(defun k410_DoSQL (	ConnectionObject 
-					SQLStatement	/	RecordSetObject
-										ReturnValue
-										FieldsObject
-										FieldList
-										FieldNumber
-										FieldCount
-										FieldItem
-										FieldName
-										FieldPropertiesList
-										TempObject
-										IsError)
-;Сброс переменных
+(defun k410_DoSQL (ConnectionObject 
+                   SQLStatement / RecordSetObject
+                                  ReturnValue
+                                  FieldsObject
+                                  FieldList
+                                  FieldNumber
+                                  FieldCount
+                                  FieldItem
+                                  FieldName
+                                  FieldPropertiesList
+                                  TempObject
+                                  IsError)
+;РЎР±СЂРѕСЃ РїРµСЂРµРјРµРЅРЅС‹С…
 ;; Assume no error
-	(setq ADOLISP_ErrorList nil
+    (setq ADOLISP_ErrorList nil
 ;; Initialize global variables
-        ADOLISP_LastSQLStatement SQLStatement
-        ADOLISP_FieldsPropertiesList nil)
+          ADOLISP_LastSQLStatement SQLStatement
+          ADOLISP_FieldsPropertiesList nil)
 ;; Create an ADO Recordset and set the cursor and lock
 ;; types
-		(setq RecordSetObject (vlax-create-object "ADODB.RecordSet"))
-		(vlax-put-property RecordSetObject "CursorType" ADOConstant-adOpenStatic)
-		(vlax-put-property RecordSetObject "LockType" ADOConstant-adLockOptimistic)
-		(vlax-put-property RecordSetObject "CursorLocation" ADOConstant-adUseClient)
-		(vlax-put-property RecordSetObject "Source" SQLStatement)
+    (setq RecordSetObject (vlax-create-object "ADODB.RecordSet"))
+    (vlax-put-property RecordSetObject "CursorType" ADOConstant-adOpenStatic)
+    (vlax-put-property RecordSetObject "LockType" ADOConstant-adLockOptimistic)
+    (vlax-put-property RecordSetObject "CursorLocation" ADOConstant-adUseClient)
+    (vlax-put-property RecordSetObject "Source" SQLStatement)
 ;; Open the recordset.  If there is an error ...
-		(if (vl-catch-all-error-p
-				(setq TempObject 	(vl-catch-all-apply 'vlax-invoke-method
-										(list 	RecordSetObject "Open" 
-												SQLStatement
-												ConnectionObject nil nil
-												ADOConstant-adCmdText
-										)
-									)
-				)
-			)
+    (if (vl-catch-all-error-p
+            (setq TempObject (vl-catch-all-apply 'vlax-invoke-method
+                                 (list RecordSetObject "Open" 
+                                       SQLStatement
+                                       ConnectionObject nil nil
+                                       ADOConstant-adCmdText
+                                 )
+                             )
+            )
+        )
 ;; Save the error information
-				(progn
-					(setq ADOLISP_ErrorList (ADOLISP_ErrorProcessor TempObject ConnectionObject))
-					(setq IsError T)
-					(vlax-release-object RecordSetObject)
-				)
-		)
+        (progn
+            (setq ADOLISP_ErrorList (ADOLISP_ErrorProcessor TempObject ConnectionObject))
+            (setq IsError T)
+            (vlax-release-object RecordSetObject)
+        )
+    )
 ;; If there were no errors ...
-	(if (not IsError)
-;; If the recordset is closed ...				
-		(if (= ADOConstant-adStateClosed (vlax-get-property RecordsetObject "State"))
-;; Then the SQL statement was a "delete ..." or an		
-;; "insert ..." or an "update ..." which doesn't		
-;; return any rows.						
-			(progn
-				(setq ReturnValue (not IsError))
-;; And release the recordset and command; we're done.		
-				(vlax-release-object RecordSetObject)
-				(if (not ADOLISP_IsAutoCAD2000) (vlax-release-object CommandObject))
-			)
-;; The recordset is open, the SQL statement			
-;; was a "select ...".						
-			(progn
-;; Get the Fields collection, which				
-;; contains the names and properties of the			
-;; selected columns						
-				(setq	FieldsObject (vlax-get-property RecordSetObject "Fields")
-;; Get the number of columns					
-						FieldCount   (vlax-get-property FieldsObject "Count")
-						FieldNumber  -1)
-;; For all the fields ...					
-				(while (> FieldCount (setq FieldNumber (1+ FieldNumber)))
-					(setq FieldItem (vlax-get-property FieldsObject "Item" FieldNumber)
-;; Get the names of all the columns in a list to		
-;; be the first part of the return value			
-						FieldName (vlax-get-property FieldItem "Name")
-						FieldList (cons FieldName FieldList)
-						FieldPropertiesList nil)
-					(foreach FieldProperty '("Type" "Precision" "NumericScale" "DefinedSize" "Attributes")
-						(setq FieldPropertiesList (cons (cons FieldProperty (vlax-get-property FieldItem FieldProperty)) FieldPropertiesList)))
-;; Save the list in the global list				
-					(setq ADOLISP_FieldsPropertiesList (cons (cons FieldName FieldPropertiesList) ADOLISP_FieldsPropertiesList))
-				)
+    (if (not IsError)
+;; If the recordset is closed ...
+        (if (= ADOConstant-adStateClosed (vlax-get-property RecordsetObject "State"))
+;; Then the SQL statement was a "delete ..." or an
+;; "insert ..." or an "update ..." which doesn't
+;; return any rows.
+            (progn
+                (setq ReturnValue (not IsError))
+;; And release the recordset and command; we're done.
+                (vlax-release-object RecordSetObject)
+                (if (not ADOLISP_IsAutoCAD2000) (vlax-release-object CommandObject))
+            )
+;; The recordset is open, the SQL statement
+;; was a "select ...".
+            (progn
+;; Get the Fields collection, which
+;; contains the names and properties of the
+;; selected columns
+                (setq FieldsObject (vlax-get-property RecordSetObject "Fields")
+;; Get the number of columns
+                      FieldCount (vlax-get-property FieldsObject "Count")
+                      FieldNumber -1)
+;; For all the fields ...                    
+                (while (> FieldCount (setq FieldNumber (1+ FieldNumber)))
+                    (setq FieldItem (vlax-get-property FieldsObject "Item" FieldNumber)
+;; Get the names of all the columns in a list to
+;; be the first part of the return value
+                          FieldName (vlax-get-property FieldItem "Name")
+                          FieldList (cons FieldName FieldList)
+                          FieldPropertiesList nil)
+                    (foreach FieldProperty '("Type" "Precision" "NumericScale" "DefinedSize" "Attributes")
+                        (setq FieldPropertiesList (cons (cons FieldProperty (vlax-get-property FieldItem FieldProperty)) FieldPropertiesList)))
+;; Save the list in the global list
+                    (setq ADOLISP_FieldsPropertiesList (cons (cons FieldName FieldPropertiesList) ADOLISP_FieldsPropertiesList))
+                )
 
 ;; Get the FieldsPropertiesList in the right order
-				(setq ADOLISP_FieldsPropertiesList (reverse ADOLISP_FieldsPropertiesList))
+                (setq ADOLISP_FieldsPropertiesList (reverse ADOLISP_FieldsPropertiesList))
 ;; Initialize the return value
-				(setq ReturnValue (list (reverse FieldList) RecordSetObject))		
-			)
-		)
-	)
+                (setq ReturnValue (list (reverse FieldList) RecordSetObject))
+            )
+        )
+    )
 ;; And return the results
-	ReturnValue
+    ReturnValue
 )
-;------------------------------- Функция загрузки данных из источника в набор --
+;------------------------------- Р¤СѓРЅРєС†РёСЏ Р·Р°РіСЂСѓР·РєРё РґР°РЅРЅС‹С… РёР· РёСЃС‚РѕС‡РЅРёРєР° РІ РЅР°Р±РѕСЂ --
 
-;------------------------------------------- Функция поиска элемента в списке --
+;------------------------------------------- Р¤СѓРЅРєС†РёСЏ РїРѕРёСЃРєР° СЌР»РµРјРµРЅС‚Р° РІ СЃРїРёСЃРєРµ --
 
-;----------------------------- Функция загрузки атрибутов из описания блока c --
-;							   заданным логическим свойством 
-;Вход:
-; *	_BlockRef - ссылка на вхождение блока;
-; *	_AttrProperty - строка с именем логического свойства:
-;	- Backward;
-;	- Constant;
-;	- HasExtensionDictionary;
-;	- Invisible;
-;	- LockPosition;
-;	- MTextAttribute;
-;	- Preset;
-;	- UpsideDown;
-;	- Verify;
-; *	_EqFlag - значение переменной (:vlax-true или :vlax-false);
-;Выход:
-; *	список ссылок на атрибуты из описания блока
-; *	nil в случае отсутствия атрибутов у блока
-(setq 	AttrObjectName 		"AcDbAttributeDefinition")
+;----------------------------- Р¤СѓРЅРєС†РёСЏ Р·Р°РіСЂСѓР·РєРё Р°С‚СЂРёР±СѓС‚РѕРІ РёР· РѕРїРёСЃР°РЅРёСЏ Р±Р»РѕРєР° c --
+;                              Р·Р°РґР°РЅРЅС‹Рј Р»РѕРіРёС‡РµСЃРєРёРј СЃРІРѕР№СЃС‚РІРѕРј 
+;Р’С…РѕРґ:
+; * _BlockRef - СЃСЃС‹Р»РєР° РЅР° РІС…РѕР¶РґРµРЅРёРµ Р±Р»РѕРєР°;
+; * _AttrProperty - СЃС‚СЂРѕРєР° СЃ РёРјРµРЅРµРј Р»РѕРіРёС‡РµСЃРєРѕРіРѕ СЃРІРѕР№СЃС‚РІР°:
+;    - Backward;
+;    - Constant;
+;    - HasExtensionDictionary;
+;    - Invisible;
+;    - LockPosition;
+;    - MTextAttribute;
+;    - Preset;
+;    - UpsideDown;
+;    - Verify;
+; * _EqFlag - Р·РЅР°С‡РµРЅРёРµ РїРµСЂРµРјРµРЅРЅРѕР№ (:vlax-true РёР»Рё :vlax-false);
+;Р’С‹С…РѕРґ:
+; * СЃРїРёСЃРѕРє СЃСЃС‹Р»РѕРє РЅР° Р°С‚СЂРёР±СѓС‚С‹ РёР· РѕРїРёСЃР°РЅРёСЏ Р±Р»РѕРєР°
+; * nil РІ СЃР»СѓС‡Р°Рµ РѕС‚СЃСѓС‚СЃС‚РІРёСЏ Р°С‚СЂРёР±СѓС‚РѕРІ Сѓ Р±Р»РѕРєР°
+(setq AttrObjectName "AcDbAttributeDefinition")
 
-(defun GetAttributes (	_BlockRef 
-						_AttrProperty 
-						_EqFlag /	_TempVar
-									_Block
-									_Index
-									_IntermediateResult
-									_Result)
-;Сброс и установка переменных
-	(setq 	_Index 0
-			_Result nil
-			_Block (vla-Item (vla-get-Blocks (vla-get-ActiveDocument (vlax-get-acad-object))) (vla-get-EffectiveName _BlockRef)))
-;Поиск объектов "атрибут" со свойством "видимый"
-	(repeat (vla-get-Count _Block)
-		(setq _TempVar (vla-Item _Block _Index))
-		(if (= (vla-get-ObjectName _TempVar) AttrObjectName)
-			(progn
-				(if (= (strcase _AttrProperty) "BACKWARD") (setq _IntermediateResult (vla-get-Backward _TempVar)))
-				(if (= (strcase _AttrProperty) "CONSTANT") (setq _IntermediateResult (vla-get-Constant _TempVar)))
-				(if (= (strcase _AttrProperty) "HASEXTENSIONDICTIONARY") (setq _IntermediateResult (vla-get-HasExtensionDictionary _TempVar)))
-				(if (= (strcase _AttrProperty) "INVISIBLE") (setq _IntermediateResult (vla-get-Invisible _TempVar)))
-				(if (= (strcase _AttrProperty) "LOCKPOSITION") (setq _IntermediateResult (vla-get-LockPosition _TempVar)))
-				(if (= (strcase _AttrProperty) "MTEXTATTRIBUTE") (setq _IntermediateResult (vla-get-MTextAttribute _TempVar)))
-				(if (= (strcase _AttrProperty) "PRESET") (setq _IntermediateResult (vla-get-Preset _TempVar)))
-				(if (= (strcase _AttrProperty) "UPSIDEDOWN") (setq _IntermediateResult (vla-get-UpsideDown _TempVar)))
-				(if (= (strcase _AttrProperty) "VERIFY") (setq _IntermediateResult (vla-get-Verify _TempVar)))
-				(if (= _IntermediateResult _EqFlag) (setq _Result (append _Result (list _TempVar))))
-			)
-		)
-		(setq _Index (1+ _Index))
-	)
+(defun GetAttributes (_BlockRef 
+                      _AttrProperty 
+                      _EqFlag / _TempVar
+                                _Block
+                                _Index
+                                _IntermediateResult
+                                _Result)
+;РЎР±СЂРѕСЃ Рё СѓСЃС‚Р°РЅРѕРІРєР° РїРµСЂРµРјРµРЅРЅС‹С…
+    (setq _Index 0
+          _Result nil
+          _Block (vla-Item (vla-get-Blocks (vla-get-ActiveDocument (vlax-get-acad-object))) (vla-get-EffectiveName _BlockRef)))
+;РџРѕРёСЃРє РѕР±СЉРµРєС‚РѕРІ "Р°С‚СЂРёР±СѓС‚" СЃРѕ СЃРІРѕР№СЃС‚РІРѕРј "РІРёРґРёРјС‹Р№"
+    (repeat (vla-get-Count _Block)
+        (setq _TempVar (vla-Item _Block _Index))
+        (if (= (vla-get-ObjectName _TempVar) AttrObjectName)
+            (progn
+                (if (= (strcase _AttrProperty) "BACKWARD") (setq _IntermediateResult (vla-get-Backward _TempVar)))
+                (if (= (strcase _AttrProperty) "CONSTANT") (setq _IntermediateResult (vla-get-Constant _TempVar)))
+                (if (= (strcase _AttrProperty) "HASEXTENSIONDICTIONARY") (setq _IntermediateResult (vla-get-HasExtensionDictionary _TempVar)))
+                (if (= (strcase _AttrProperty) "INVISIBLE") (setq _IntermediateResult (vla-get-Invisible _TempVar)))
+                (if (= (strcase _AttrProperty) "LOCKPOSITION") (setq _IntermediateResult (vla-get-LockPosition _TempVar)))
+                (if (= (strcase _AttrProperty) "MTEXTATTRIBUTE") (setq _IntermediateResult (vla-get-MTextAttribute _TempVar)))
+                (if (= (strcase _AttrProperty) "PRESET") (setq _IntermediateResult (vla-get-Preset _TempVar)))
+                (if (= (strcase _AttrProperty) "UPSIDEDOWN") (setq _IntermediateResult (vla-get-UpsideDown _TempVar)))
+                (if (= (strcase _AttrProperty) "VERIFY") (setq _IntermediateResult (vla-get-Verify _TempVar)))
+                (if (= _IntermediateResult _EqFlag) (setq _Result (append _Result (list _TempVar))))
+            )
+        )
+        (setq _Index (1+ _Index))
+    )
   _Result
 )
-;							   Функция загрузки атрибутов из описания блока c
-;----------------------------- заданным логическим свойством -------------------
+;                              Р¤СѓРЅРєС†РёСЏ Р·Р°РіСЂСѓР·РєРё Р°С‚СЂРёР±СѓС‚РѕРІ РёР· РѕРїРёСЃР°РЅРёСЏ Р±Р»РѕРєР° c
+;----------------------------- Р·Р°РґР°РЅРЅС‹Рј Р»РѕРіРёС‡РµСЃРєРёРј СЃРІРѕР№СЃС‚РІРѕРј -------------------
 
-;------------------ Функция инициализации переменных для выбранного вхождения --
-(defun InitBlock (/	_Index
-					_TempVar)
-;Получение указателя на выбронное вхождение
-	(if (not ReloadDataFlag)
-		(setq CurBlockRef (vla-Item (vla-get-PickfirstSelectionSet ActiveDoc) 0))
-	)
-;Получение указателя на описание блока
-	(setq 	CurBlock (vla-Item (vla-get-Blocks ActiveDoc) (vla-get-EffectiveName CurBlockRef))
-;Загрузка списка ссылок на рабочие атрибуты блока
-			AttrRefList (GetAttributes CurBlockRef "Constant" :vlax-false)
-;Загрузка списка ссылок на константные атрибуты блока
-			ConstAttrRefList (GetAttributes CurBlockRef "Constant" :vlax-true)
-;Сброс переменных
-			ConstAttrList nil
-			AttrList nil
-			AttrFieldsList nil
-			AttrRefKeyFieldValue nil
-			TagUDLFile ""
-			TagTableName ""
-			TagKeyFieldName ""
-			TagKeyFieldValue ""
-			NewAttrFlag F)
-;Формирование списка имен константных атрибутов
-	(foreach _ConstAttr ConstAttrRefList
-		(setq ConstAttrList (append ConstAttrList (list (vla-get-TagString _ConstAttr))))
-;Запись значения UDLFile
-		(if (= (vla-get-TagString _ConstAttr) AttrUDLFile)
-			(setq TagUDLFile (vla-get-TextString _ConstAttr));then
-		)
-;Запись значения имени таблицы источника данных	
-		(if (= (vla-get-TagString _ConstAttr) AttrTableName)
-			(setq TagTableName (vla-get-TextString _ConstAttr));then
-		)
-;Запись имени ключевого поля таблицы источника данных		
-		(if (= (vla-get-TagString _ConstAttr) AttrKeyFieldName)
-			(setq TagKeyFieldName (vla-get-TextString _ConstAttr));then
-		)		
-	)
-;Формирование списка имен рабочих атрибутов
-	(foreach _CurAttr AttrRefList
-		(if (/= (vla-get-TagString _CurAttr) AttrKeyFieldValue)
+;------------------ Р¤СѓРЅРєС†РёСЏ РёРЅРёС†РёР°Р»РёР·Р°С†РёРё РїРµСЂРµРјРµРЅРЅС‹С… РґР»СЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ РІС…РѕР¶РґРµРЅРёСЏ --
+(defun InitBlock (/ _Index
+                    _TempVar)
+;РџРѕР»СѓС‡РµРЅРёРµ СѓРєР°Р·Р°С‚РµР»СЏ РЅР° РІС‹Р±СЂРѕРЅРЅРѕРµ РІС…РѕР¶РґРµРЅРёРµ
+    (if (not ReloadDataFlag)
+        (setq CurBlockRef (vla-Item (vla-get-PickfirstSelectionSet ActiveDoc) 0))
+    )
+;РџРѕР»СѓС‡РµРЅРёРµ СѓРєР°Р·Р°С‚РµР»СЏ РЅР° РѕРїРёСЃР°РЅРёРµ Р±Р»РѕРєР°
+    (setq CurBlock (vla-Item (vla-get-Blocks ActiveDoc) (vla-get-EffectiveName CurBlockRef))
+;Р—Р°РіСЂСѓР·РєР° СЃРїРёСЃРєР° СЃСЃС‹Р»РѕРє РЅР° СЂР°Р±РѕС‡РёРµ Р°С‚СЂРёР±СѓС‚С‹ Р±Р»РѕРєР°
+          AttrRefList (GetAttributes CurBlockRef "Constant" :vlax-false)
+;Р—Р°РіСЂСѓР·РєР° СЃРїРёСЃРєР° СЃСЃС‹Р»РѕРє РЅР° РєРѕРЅСЃС‚Р°РЅС‚РЅС‹Рµ Р°С‚СЂРёР±СѓС‚С‹ Р±Р»РѕРєР°
+          ConstAttrRefList (GetAttributes CurBlockRef "Constant" :vlax-true)
+;РЎР±СЂРѕСЃ РїРµСЂРµРјРµРЅРЅС‹С…
+          ConstAttrList nil
+          AttrList nil
+          AttrFieldsList nil
+          AttrRefKeyFieldValue nil
+          TagUDLFile ""
+          TagTableName ""
+          TagKeyFieldName ""
+          TagKeyFieldValue ""
+          NewAttrFlag F)
+;Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ СЃРїРёСЃРєР° РёРјРµРЅ РєРѕРЅСЃС‚Р°РЅС‚РЅС‹С… Р°С‚СЂРёР±СѓС‚РѕРІ
+    (foreach _ConstAttr ConstAttrRefList
+        (setq ConstAttrList (append ConstAttrList (list (vla-get-TagString _ConstAttr))))
+;Р—Р°РїРёСЃСЊ Р·РЅР°С‡РµРЅРёСЏ UDLFile
+        (if (= (vla-get-TagString _ConstAttr) AttrUDLFile)
+            (setq TagUDLFile (vla-get-TextString _ConstAttr));then
+        )
+;Р—Р°РїРёСЃСЊ Р·РЅР°С‡РµРЅРёСЏ РёРјРµРЅРё С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+        (if (= (vla-get-TagString _ConstAttr) AttrTableName)
+            (setq TagTableName (vla-get-TextString _ConstAttr));then
+        )
+;Р—Р°РїРёСЃСЊ РёРјРµРЅРё РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+        (if (= (vla-get-TagString _ConstAttr) AttrKeyFieldName)
+            (setq TagKeyFieldName (vla-get-TextString _ConstAttr));then
+        )
+    )
+;Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ СЃРїРёСЃРєР° РёРјРµРЅ СЂР°Р±РѕС‡РёС… Р°С‚СЂРёР±СѓС‚РѕРІ
+    (foreach _CurAttr AttrRefList
+        (if (/= (vla-get-TagString _CurAttr) AttrKeyFieldValue)
 ;then
-			(progn
-				(setq AttrList (append AttrList (list (vla-get-TagString _CurAttr))))
-				(if (null (vl-position (strcat AttrPrefix (vla-get-TagString _CurAttr)) ConstAttrList))
+            (progn
+                (setq AttrList (append AttrList (list (vla-get-TagString _CurAttr))))
+                (if (null (vl-position (strcat AttrPrefix (vla-get-TagString _CurAttr)) ConstAttrList))
 ;then
-					(setq AttrFieldsList (append AttrFieldsList (list "")))
+                    (setq AttrFieldsList (append AttrFieldsList (list "")))
 ;else
-					(setq AttrFieldsList 
-						(append AttrFieldsList 
-							(list	
-								(vla-get-TextString 
-									(nth (vl-position (strcat AttrPrefix (vla-get-TagString _CurAttr)) ConstAttrList) ConstAttrRefList)
-								)
-							)
-						)
-					)
-				)
-			)
-		)
-	)
-;Поиск атрибута значения ключевого поля таблицы источника данных
-	(foreach _AttrRef (vlax-safearray->list (vlax-variant-value (vla-GetAttributes CurBlockRef)))
-;Загрузка значения ключевого поля
-		(if (= (vla-Get-TagString _AttrRef) AttrKeyFieldValue)
+                    (setq AttrFieldsList 
+                        (append AttrFieldsList 
+                            (list    
+                                (vla-get-TextString 
+                                    (nth (vl-position (strcat AttrPrefix (vla-get-TagString _CurAttr)) ConstAttrList) ConstAttrRefList)
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+;РџРѕРёСЃРє Р°С‚СЂРёР±СѓС‚Р° Р·РЅР°С‡РµРЅРёСЏ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+    (foreach _AttrRef (vlax-safearray->list (vlax-variant-value (vla-GetAttributes CurBlockRef)))
+;Р—Р°РіСЂСѓР·РєР° Р·РЅР°С‡РµРЅРёСЏ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ
+        (if (= (vla-Get-TagString _AttrRef) AttrKeyFieldValue)
 ;then
-			(setq 	TagKeyFieldValue (vla-Get-TextString _AttrRef)
-					AttrRefKeyFieldValue _AttrRef)
-		)
-	)
+            (setq TagKeyFieldValue (vla-Get-TextString _AttrRef)
+                  AttrRefKeyFieldValue _AttrRef)
+        )
+    )
 )
-;------------------ Функция инициализации переменных для выбранного вхождения --
+;------------------ Р¤СѓРЅРєС†РёСЏ РёРЅРёС†РёР°Р»РёР·Р°С†РёРё РїРµСЂРµРјРµРЅРЅС‹С… РґР»СЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ РІС…РѕР¶РґРµРЅРёСЏ --
 
-;----------------------------------------- Функция формирования набора данных --
-;Выход:
-; - CurColumnList - список имен полей загруженного набора данных
-; - CurRecordSet - ссылка на загруженный набор данных
+;----------------------------------------- Р¤СѓРЅРєС†РёСЏ С„РѕСЂРјРёСЂРѕРІР°РЅРёСЏ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С… --
+;Р’С‹С…РѕРґ:
+; - CurColumnList - СЃРїРёСЃРѕРє РёРјРµРЅ РїРѕР»РµР№ Р·Р°РіСЂСѓР¶РµРЅРЅРѕРіРѕ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С…
+; - CurRecordSet - СЃСЃС‹Р»РєР° РЅР° Р·Р°РіСЂСѓР¶РµРЅРЅС‹Р№ РЅР°Р±РѕСЂ РґР°РЅРЅС‹С…
 
-(defun GetRecordSet (/	_KeyFields
-						_KeyValues
-						_FullView
-						_ConnectionObj)
+(defun GetRecordSet (/ _KeyFields
+                      _KeyValues
+                      _FullView
+                      _ConnectionObj)
 
-;Поиск сохраненного набора данных
-	(setq 	_View (assoc (strcat TagUDLFile ";" TagTableName ";" TagKeyFieldName) Views)
-;Сброс переменных
-			CurRecordSet nil
-			CurColumnList nil
-			CurKeyValueList nil
-			;ADOLISP_DoNotForceJetODBCParsing nil
-			)
-	(if (null _View)
+;РџРѕРёСЃРє СЃРѕС…СЂР°РЅРµРЅРЅРѕРіРѕ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С…
+    (setq _View (assoc (strcat TagUDLFile ";" TagTableName ";" TagKeyFieldName) Views)
+;РЎР±СЂРѕСЃ РїРµСЂРµРјРµРЅРЅС‹С…
+          CurRecordSet nil
+          CurColumnList nil
+          CurKeyValueList nil
+          ;ADOLISP_DoNotForceJetODBCParsing nil
+    )
+    (if (null _View)
 ;then
-;Подключение источника данных
-		(if (/= TagUDLFile "")
+;РџРѕРґРєР»СЋС‡РµРЅРёРµ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+        (if (/= TagUDLFile "")
 ;then
-			(if (findfile TagUDLFile)
-;Подключение к источнику данных
-				(progn
-					(prompt "Открытие соединения с источником данных\n")
-					(setq _ConnectionObj (ADOLISP_ConnectToDB TagUDLFile "" ""))
-					(if (null _ConnectionObj)
+            (if (findfile TagUDLFile)
+;РџРѕРґРєР»СЋС‡РµРЅРёРµ Рє РёСЃС‚РѕС‡РЅРёРєСѓ РґР°РЅРЅС‹С…
+                (progn
+                    (prompt "РћС‚РєСЂС‹С‚РёРµ СЃРѕРµРґРёРЅРµРЅРёСЏ СЃ РёСЃС‚РѕС‡РЅРёРєРѕРј РґР°РЅРЅС‹С…\n")
+                    (setq _ConnectionObj (ADOLISP_ConnectToDB TagUDLFile "" ""))
+                    (if (null _ConnectionObj)
 ;then
-						(k410_ErrorPrinter)
+                        (k410_ErrorPrinter)
 ;else
-						(progn
-							(prompt "Загрузка набора данных\n")
-							(setq	_KeyFields (last (k410_DoSQL _ConnectionObj (strcat "SELECT " TagKeyFieldName " FROM " TagTableName ";")))
-									_FullView (k410_DoSQL _ConnectionObj (strcat "SELECT * FROM " TagTableName ";")))
-							(prompt "Загрузка значений ключевого поля\n")
-;Позиционирование курсора на первую запись набора данных
-							(vlax-invoke-method _KeyFields "MoveFirst")
-;Загрузка значений ключевого поля
-							(while (= (vlax-get-property _KeyFields "EOF") :vlax-false)
-								(setq _KeyValues 	
-									(append	_KeyValues
-										(list
-											(vl-string-right-trim "\r"
-												(vlax-invoke-method _KeyFields "GetString" 2 1 nil nil nil)
-											)
-										)
-									)
-								)
-							)
-;Закрытие набора данных значений ключевого поля
-							(vlax-invoke-method _KeyFields "Close")
-							(vlax-release-object _KeyFields)
-;Формирование итогового списка							
-							(setq	_View (list (car _FullView) 
-												_KeyValues
-												(last _FullView)))													
-;Проверка на отсутствие nil-ов в полученных списках
-							(if (null (vl-position nil _View))
-;then								
-								(progn
-;Список полей таблицы источника данных
-									(setq 	CurColumnList (car _View)
-;Список значений ключевого поля
-											CurKeyValueList _KeyValues
-;Набор данных
-											CurRecordSet (last _FullView)
-;Добавление набора данных к списку наборов
-											Views (append 	Views 
-															(list (append (list (strcat TagUDLFile ";" TagTableName ";" TagKeyFieldName)) _View))))
-;Проверка ключевого поля
-									(if (null (vl-position TagKeyFieldName CurColumnList))
-										(alert Error_001_TXT))
-								)
+                        (progn
+                            (prompt "Р—Р°РіСЂСѓР·РєР° РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С…\n")
+                            (setq _KeyFields (last (k410_DoSQL _ConnectionObj (strcat "SELECT " TagKeyFieldName " FROM " TagTableName ";")))
+                                  _FullView (k410_DoSQL _ConnectionObj (strcat "SELECT * FROM " TagTableName ";")))
+                            (prompt "Р—Р°РіСЂСѓР·РєР° Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ\n")
+;РџРѕР·РёС†РёРѕРЅРёСЂРѕРІР°РЅРёРµ РєСѓСЂСЃРѕСЂР° РЅР° РїРµСЂРІСѓСЋ Р·Р°РїРёСЃСЊ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С…
+                            (vlax-invoke-method _KeyFields "MoveFirst")
+;Р—Р°РіСЂСѓР·РєР° Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ
+                            (while (= (vlax-get-property _KeyFields "EOF") :vlax-false)
+                                (setq _KeyValues
+                                    (append _KeyValues
+                                        (list
+                                            (vl-string-right-trim "\r"
+                                                (vlax-invoke-method _KeyFields "GetString" 2 1 nil nil nil)
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+;Р—Р°РєСЂС‹С‚РёРµ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С… Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ
+                            (vlax-invoke-method _KeyFields "Close")
+                            (vlax-release-object _KeyFields)
+;Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ РёС‚РѕРіРѕРІРѕРіРѕ СЃРїРёСЃРєР°
+                            (setq _View (list (car _FullView) 
+                                  _KeyValues
+                                  (last _FullView)))
+;РџСЂРѕРІРµСЂРєР° РЅР° РѕС‚СЃСѓС‚СЃС‚РІРёРµ nil-РѕРІ РІ РїРѕР»СѓС‡РµРЅРЅС‹С… СЃРїРёСЃРєР°С…
+                            (if (null (vl-position nil _View))
+;then
+                                (progn
+;РЎРїРёСЃРѕРє РїРѕР»РµР№ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+                                    (setq CurColumnList (car _View)
+;РЎРїРёСЃРѕРє Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ
+                                          CurKeyValueList _KeyValues
+;РќР°Р±РѕСЂ РґР°РЅРЅС‹С…
+                                          CurRecordSet (last _FullView)
+;Р”РѕР±Р°РІР»РµРЅРёРµ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С… Рє СЃРїРёСЃРєСѓ РЅР°Р±РѕСЂРѕРІ
+                                            Views (append Views 
+                                                            (list (append (list (strcat TagUDLFile ";" TagTableName ";" TagKeyFieldName)) _View))))
+;РџСЂРѕРІРµСЂРєР° РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ
+                                    (if (null (vl-position TagKeyFieldName CurColumnList))
+                                        (alert Error_001_TXT))
+                                )
 ;else
-								(alert Error_003_TXT)
-							)
-						)
-					)
-				)
-;else						
-				(alert Error_002_TXT)					
-			)
-		)
+                                (alert Error_003_TXT)
+                            )
+                        )
+                    )
+                )
 ;else
-;Список полей таблицы источника данных
-		(setq 	CurColumnList (cadr _View)
-;Список значений ключевого поля
-				CurKeyValueList (caddr _View)
-;Набор данных
-				CurRecordSet (last _View))
-	)
+                (alert Error_002_TXT)
+            )
+        )
+;else
+;РЎРїРёСЃРѕРє РїРѕР»РµР№ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+        (setq CurColumnList (cadr _View)
+;РЎРїРёСЃРѕРє Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ
+              CurKeyValueList (caddr _View)
+;РќР°Р±РѕСЂ РґР°РЅРЅС‹С…
+              CurRecordSet (last _View))
+    )
 )
-;----------------------------------------- Функция формирования набора данных --
+;----------------------------------------- Р¤СѓРЅРєС†РёСЏ С„РѕСЂРјРёСЂРѕРІР°РЅРёСЏ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С… --
 
-;------------------------------------------- Функция обновления набора данных --
+;------------------------------------------- Р¤СѓРЅРєС†РёСЏ РѕР±РЅРѕРІР»РµРЅРёСЏ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С… --
 (defun ReloadRecordSet (/)
-;Установка флага диалога обновления
-	(setq ReloadFlag ReloadRecordSet)
-;Диалог обновления набора данных
-	(prompt "\n")
-;Отображение формы
-	(dcl_Form_Show k410odcl_ReloadDialog)
-;Сброс флага диалога обновления
-	(setq ReloadFlag 0)
+;РЈСЃС‚Р°РЅРѕРІРєР° С„Р»Р°РіР° РґРёР°Р»РѕРіР° РѕР±РЅРѕРІР»РµРЅРёСЏ
+    (setq ReloadFlag ReloadRecordSet)
+;Р”РёР°Р»РѕРі РѕР±РЅРѕРІР»РµРЅРёСЏ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С…
+    (prompt "\n")
+;РћС‚РѕР±СЂР°Р¶РµРЅРёРµ С„РѕСЂРјС‹
+    (dcl_Form_Show k410odcl_ReloadDialog)
+;РЎР±СЂРѕСЃ С„Р»Р°РіР° РґРёР°Р»РѕРіР° РѕР±РЅРѕРІР»РµРЅРёСЏ
+    (setq ReloadFlag 0)
 )
-;------------------------------------------- Функция обновления набора данных --
+;------------------------------------------- Р¤СѓРЅРєС†РёСЏ РѕР±РЅРѕРІР»РµРЅРёСЏ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С… --
 
-;------------------------------------------ Команды извлечения значений ключа --
-;Выход:
-; - nil - атрибута ключа нет или значение ключа равно nil
-; - список значений KeyValues и в строка значений KeyValuesStr (полученную 
-;	строку	удобно использовать при посроении SQL-запросов к источникам данных)
+;------------------------------------------ РљРѕРјР°РЅРґС‹ РёР·РІР»РµС‡РµРЅРёСЏ Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡Р° --
+;Р’С‹С…РѕРґ:
+; - nil - Р°С‚СЂРёР±СѓС‚Р° РєР»СЋС‡Р° РЅРµС‚ РёР»Рё Р·РЅР°С‡РµРЅРёРµ РєР»СЋС‡Р° СЂР°РІРЅРѕ nil
+; - СЃРїРёСЃРѕРє Р·РЅР°С‡РµРЅРёР№ KeyValues Рё РІ СЃС‚СЂРѕРєР° Р·РЅР°С‡РµРЅРёР№ KeyValuesStr (РїРѕР»СѓС‡РµРЅРЅСѓСЋ 
+;    СЃС‚СЂРѕРєСѓ    СѓРґРѕР±РЅРѕ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РїСЂРё РїРѕСЃСЂРѕРµРЅРёРё SQL-Р·Р°РїСЂРѕСЃРѕРІ Рє РёСЃС‚РѕС‡РЅРёРєР°Рј РґР°РЅРЅС‹С…)
 ;
-;Если установлен флаг KeyValuesClear (= Т) перед выполнением команды списки
-;значений сбрасываются
+;Р•СЃР»Рё СѓСЃС‚Р°РЅРѕРІР»РµРЅ С„Р»Р°Рі KeyValuesClear (= Рў) РїРµСЂРµРґ РІС‹РїРѕР»РЅРµРЅРёРµРј РєРѕРјР°РЅРґС‹ СЃРїРёСЃРєРё
+;Р·РЅР°С‡РµРЅРёР№ СЃР±СЂР°СЃС‹РІР°СЋС‚СЃСЏ
 
-;Команда получения массива значений ключей из текущего выделения
-(defun GetKeyValues (/	_Index
-							_PFSS
-							_Item)
-;Инициализация переменных
-	(setq 	_Index 0
-			ReloadDataFlag T
-			_PFSS (vla-get-PickFirstSelectionSet ActiveDoc))
-;Сброс списков значений ключей
-	(if (= KeyValuesClear T)
-		(setq 	KeyValues nil
-				KeyValuesStr "")
-	)
-;Извлечение значений ключевого поля
-	(repeat  (vla-get-Count _PFSS)
-;Загрузка ссылки на элемент выделения
-		(setq _Item (vla-Item _PFSS _Index))
-;Получение значения ключевого поля
-		(if (= (vla-get-ObjectName _Item) "AcDbBlockReference")
-			(if (= (vla-get-HasAttributes _Item) :vlax-true)
-				(progn
-					(setq CurBlockRef _Item)
-;Инициализация выбранного блока
-					(InitBlock)
-					(if (/= TagKeyFieldValue "")
-						(progn
-;Добавление значения ключа в список
-							(setq KeyValues (append KeyValues (list TagKeyFieldValue)))
-;Добавление значения ключа в строку значений
-							(if	(= KeyValuesStr "")
-								(setq KeyValuesStr TagKeyFieldValue);then
-								(setq KeyValuesStr (strcat KeyValuesStr StrDelimiter TagKeyFieldValue));else
-							)
-						)
-					)
-				)
-			)
-		)
-		(setq _Index (1+ _Index))
-	)
-;Сброс флага обновления данных
-	(setq ReloadDataFlag F)
+;РљРѕРјР°РЅРґР° РїРѕР»СѓС‡РµРЅРёСЏ РјР°СЃСЃРёРІР° Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµР№ РёР· С‚РµРєСѓС‰РµРіРѕ РІС‹РґРµР»РµРЅРёСЏ
+(defun GetKeyValues (/ _Index
+                       _PFSS
+                       _Item)
+;РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїРµСЂРµРјРµРЅРЅС‹С…
+    (setq _Index 0
+          ReloadDataFlag T
+          _PFSS (vla-get-PickFirstSelectionSet ActiveDoc))
+;РЎР±СЂРѕСЃ СЃРїРёСЃРєРѕРІ Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµР№
+    (if (= KeyValuesClear T)
+        (setq KeyValues nil
+              KeyValuesStr "")
+    )
+;РР·РІР»РµС‡РµРЅРёРµ Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ
+    (repeat (vla-get-Count _PFSS)
+;Р—Р°РіСЂСѓР·РєР° СЃСЃС‹Р»РєРё РЅР° СЌР»РµРјРµРЅС‚ РІС‹РґРµР»РµРЅРёСЏ
+        (setq _Item (vla-Item _PFSS _Index))
+;РџРѕР»СѓС‡РµРЅРёРµ Р·РЅР°С‡РµРЅРёСЏ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ
+        (if (= (vla-get-ObjectName _Item) "AcDbBlockReference")
+            (if (= (vla-get-HasAttributes _Item) :vlax-true)
+                (progn
+                    (setq CurBlockRef _Item)
+;РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ Р±Р»РѕРєР°
+                    (InitBlock)
+                    (if (/= TagKeyFieldValue "")
+                        (progn
+;Р”РѕР±Р°РІР»РµРЅРёРµ Р·РЅР°С‡РµРЅРёСЏ РєР»СЋС‡Р° РІ СЃРїРёСЃРѕРє
+                            (setq KeyValues (append KeyValues (list TagKeyFieldValue)))
+;Р”РѕР±Р°РІР»РµРЅРёРµ Р·РЅР°С‡РµРЅРёСЏ РєР»СЋС‡Р° РІ СЃС‚СЂРѕРєСѓ Р·РЅР°С‡РµРЅРёР№
+                            (if    (= KeyValuesStr "")
+                                (setq KeyValuesStr TagKeyFieldValue);then
+                                (setq KeyValuesStr (strcat KeyValuesStr StrDelimiter TagKeyFieldValue));else
+                            )
+                        )
+                    )
+                )
+            )
+        )
+        (setq _Index (1+ _Index))
+    )
+;РЎР±СЂРѕСЃ С„Р»Р°РіР° РѕР±РЅРѕРІР»РµРЅРёСЏ РґР°РЅРЅС‹С…
+    (setq ReloadDataFlag F)
 )
-;Длинная команда
+;Р”Р»РёРЅРЅР°СЏ РєРѕРјР°РЅРґР°
 (defun c:k410_GetKeyValues (/)
-	(GetKeyValues)
+    (GetKeyValues)
 )
-;Короткая команда
-;Перед выполнением команды список и строка значений сбрасываются
+;РљРѕСЂРѕС‚РєР°СЏ РєРѕРјР°РЅРґР°
+;РџРµСЂРµРґ РІС‹РїРѕР»РЅРµРЅРёРµРј РєРѕРјР°РЅРґС‹ СЃРїРёСЃРѕРє Рё СЃС‚СЂРѕРєР° Р·РЅР°С‡РµРЅРёР№ СЃР±СЂР°СЃС‹РІР°СЋС‚СЃСЏ
 (defun c:k410_gkv (/)
-	(GetKeyValues)
-;Возврат загруженного списка
-	KeyValuesStr
+    (GetKeyValues)
+;Р’РѕР·РІСЂР°С‚ Р·Р°РіСЂСѓР¶РµРЅРЅРѕРіРѕ СЃРїРёСЃРєР°
+    KeyValuesStr
 )
 ;-------------------------------------------------------------------------------
-;Сброс списка значений ключей KeyValues и KeyValuesStr
+;РЎР±СЂРѕСЃ СЃРїРёСЃРєР° Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµР№ KeyValues Рё KeyValuesStr
 (defun c:k410_KeyValuesClear (/)
-;Сброс списка и строки значений
-	(setq 	KeyValues nil
-			KeyValuesStr "")
+;РЎР±СЂРѕСЃ СЃРїРёСЃРєР° Рё СЃС‚СЂРѕРєРё Р·РЅР°С‡РµРЅРёР№
+    (setq KeyValues nil
+          KeyValuesStr "")
 )
-;------------------------------------------ Команды извлечения значений ключа --
+;------------------------------------------ РљРѕРјР°РЅРґС‹ РёР·РІР»РµС‡РµРЅРёСЏ Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡Р° --
 
-;----------------------------------------------------- Функция OR для списков --
-;Вход:
-;	- _L1, _L2 - списки
-;Выход:
-;	список, состоящий из элементов _L1 и элементов _L2
+;----------------------------------------------------- Р¤СѓРЅРєС†РёСЏ OR РґР»СЏ СЃРїРёСЃРєРѕРІ --
+;Р’С…РѕРґ:
+;    - _L1, _L2 - СЃРїРёСЃРєРё
+;Р’С‹С…РѕРґ:
+;    СЃРїРёСЃРѕРє, СЃРѕСЃС‚РѕСЏС‰РёР№ РёР· СЌР»РµРјРµРЅС‚РѕРІ _L1 Рё СЌР»РµРјРµРЅС‚РѕРІ _L2
 (defun ListOR (_L1 _L2 /)
-	(if (= (and (listp _L1) (listp _L2)) T)
-;Объединение списков и возвращение результата
-		(append _L1 _L2);then
-		(prompt "\nАргументами функции должны быть списки\n");else
-	)
+    (if (= (and (listp _L1) (listp _L2)) T)
+;РћР±СЉРµРґРёРЅРµРЅРёРµ СЃРїРёСЃРєРѕРІ Рё РІРѕР·РІСЂР°С‰РµРЅРёРµ СЂРµР·СѓР»СЊС‚Р°С‚Р°
+        (append _L1 _L2);then
+        (prompt "\nРђСЂРіСѓРјРµРЅС‚Р°РјРё С„СѓРЅРєС†РёРё РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ СЃРїРёСЃРєРё\n");else
+    )
 )
-;----------------------------------------------------- Функция OR для списков --
+;----------------------------------------------------- Р¤СѓРЅРєС†РёСЏ OR РґР»СЏ СЃРїРёСЃРєРѕРІ --
 
-;---------------------------------------------------- Функция XOR для списков --
-;Вход:
-;	- _L1, _L2 - списки
-;Выход:
-;	список, состоящий из элементов _L1, которых нет в _L2 и элементов _L2,
-;	которых нет в _L1
-(defun ListXOR (	_L1 _L2 /	_Item
-								_FullList
-								_Part1
-								_Part2)
-	(if (= (and (listp _L1) (listp _L2)) T)
-		(progn
-;Cписок, состоящий из всех элементов списков
-			(setq 	_FullList (append _L1 _L2)
-					_Part1 _FullList
-					_Part2 _FullList)
-;Удаление элементов первого списка
-			(foreach _Item _L1
-				(setq _Part1 (vl-remove _Item _Part1))
-			)
-;Удаление элементов второго списка
-			(foreach _Item _L2
-				(setq _Part2 (vl-remove _Item _Part2))
-			)
-;Объединение полученных частей и возвращение результата
-			(append _Part2 _Part1)
-		)
-		(prompt "\nАргументами функции должны быть списки\n")
-	)
+;---------------------------------------------------- Р¤СѓРЅРєС†РёСЏ XOR РґР»СЏ СЃРїРёСЃРєРѕРІ --
+;Р’С…РѕРґ:
+;    - _L1, _L2 - СЃРїРёСЃРєРё
+;Р’С‹С…РѕРґ:
+;    СЃРїРёСЃРѕРє, СЃРѕСЃС‚РѕСЏС‰РёР№ РёР· СЌР»РµРјРµРЅС‚РѕРІ _L1, РєРѕС‚РѕСЂС‹С… РЅРµС‚ РІ _L2 Рё СЌР»РµРјРµРЅС‚РѕРІ _L2,
+;    РєРѕС‚РѕСЂС‹С… РЅРµС‚ РІ _L1
+(defun ListXOR (_L1 _L2 / _Item
+                          _FullList
+                          _Part1
+                          _Part2)
+    (if (= (and (listp _L1) (listp _L2)) T)
+        (progn
+;CРїРёСЃРѕРє, СЃРѕСЃС‚РѕСЏС‰РёР№ РёР· РІСЃРµС… СЌР»РµРјРµРЅС‚РѕРІ СЃРїРёСЃРєРѕРІ
+            (setq     _FullList (append _L1 _L2)
+                    _Part1 _FullList
+                    _Part2 _FullList)
+;РЈРґР°Р»РµРЅРёРµ СЌР»РµРјРµРЅС‚РѕРІ РїРµСЂРІРѕРіРѕ СЃРїРёСЃРєР°
+            (foreach _Item _L1
+                (setq _Part1 (vl-remove _Item _Part1))
+            )
+;РЈРґР°Р»РµРЅРёРµ СЌР»РµРјРµРЅС‚РѕРІ РІС‚РѕСЂРѕРіРѕ СЃРїРёСЃРєР°
+            (foreach _Item _L2
+                (setq _Part2 (vl-remove _Item _Part2))
+            )
+;РћР±СЉРµРґРёРЅРµРЅРёРµ РїРѕР»СѓС‡РµРЅРЅС‹С… С‡Р°СЃС‚РµР№ Рё РІРѕР·РІСЂР°С‰РµРЅРёРµ СЂРµР·СѓР»СЊС‚Р°С‚Р°
+            (append _Part2 _Part1)
+        )
+        (prompt "\nРђСЂРіСѓРјРµРЅС‚Р°РјРё С„СѓРЅРєС†РёРё РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ СЃРїРёСЃРєРё\n")
+    )
 )
-;---------------------------------------------------- Функция XOR для списков --
+;---------------------------------------------------- Р¤СѓРЅРєС†РёСЏ XOR РґР»СЏ СЃРїРёСЃРєРѕРІ --
 
-;---------------------------------------------------- Функция AND для списков --
-;Вход:
-;	- _L1, _L2 - списки
-;Выход:
-;	список, состоящий из элементов, которые есть и в_L1 и в _L2
-(defun ListAND (	_L1 _L2 /	_Item
-								_FullList
-								_Part)
-	(if (= (and (listp _L1) (listp _L2)) T)
-		(progn
-;Cписок, состоящий из всех элементов списков
-			(setq 	_FullList (append _L1 _L2)
-					_Part _FullList)
-;Удаление элементов второго списка 
-;(получение списка элементов _L1, которых нет в _L2)
-			(foreach _Item _L2
-				(setq _FullList (vl-remove _Item _FullList))
-			)
-;Удаление элементов, которых нет во втором списке
-			(foreach _Item _FullList
-				(setq _L1 (vl-remove _Item _L1))
-			)
-;Возвращение результата
-			_L1
-		)
-		(prompt "\nАргументами функции должны быть списки\n")
-	)
+;---------------------------------------------------- Р¤СѓРЅРєС†РёСЏ AND РґР»СЏ СЃРїРёСЃРєРѕРІ --
+;Р’С…РѕРґ:
+;    - _L1, _L2 - СЃРїРёСЃРєРё
+;Р’С‹С…РѕРґ:
+;    СЃРїРёСЃРѕРє, СЃРѕСЃС‚РѕСЏС‰РёР№ РёР· СЌР»РµРјРµРЅС‚РѕРІ, РєРѕС‚РѕСЂС‹Рµ РµСЃС‚СЊ Рё РІ_L1 Рё РІ _L2
+(defun ListAND (_L1 _L2 / _Item
+                          _FullList
+                          _Part)
+    (if (= (and (listp _L1) (listp _L2)) T)
+        (progn
+;CРїРёСЃРѕРє, СЃРѕСЃС‚РѕСЏС‰РёР№ РёР· РІСЃРµС… СЌР»РµРјРµРЅС‚РѕРІ СЃРїРёСЃРєРѕРІ
+            (setq _FullList (append _L1 _L2)
+                  _Part _FullList)
+;РЈРґР°Р»РµРЅРёРµ СЌР»РµРјРµРЅС‚РѕРІ РІС‚РѕСЂРѕРіРѕ СЃРїРёСЃРєР° 
+;(РїРѕР»СѓС‡РµРЅРёРµ СЃРїРёСЃРєР° СЌР»РµРјРµРЅС‚РѕРІ _L1, РєРѕС‚РѕСЂС‹С… РЅРµС‚ РІ _L2)
+            (foreach _Item _L2
+                (setq _FullList (vl-remove _Item _FullList))
+            )
+;РЈРґР°Р»РµРЅРёРµ СЌР»РµРјРµРЅС‚РѕРІ, РєРѕС‚РѕСЂС‹С… РЅРµС‚ РІРѕ РІС‚РѕСЂРѕРј СЃРїРёСЃРєРµ
+            (foreach _Item _FullList
+                (setq _L1 (vl-remove _Item _L1))
+            )
+;Р’РѕР·РІСЂР°С‰РµРЅРёРµ СЂРµР·СѓР»СЊС‚Р°С‚Р°
+            _L1
+        )
+        (prompt "\nРђСЂРіСѓРјРµРЅС‚Р°РјРё С„СѓРЅРєС†РёРё РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ СЃРїРёСЃРєРё\n")
+    )
 )
-;---------------------------------------------------- Функция AND для списков --
+;---------------------------------------------------- Р¤СѓРЅРєС†РёСЏ AND РґР»СЏ СЃРїРёСЃРєРѕРІ --
 
-;###################################################### Диалог: адреса данных ##
-;------------------------- Функция создания или редактирования адресов данных --
+;###################################################### Р”РёР°Р»РѕРі: Р°РґСЂРµСЃР° РґР°РЅРЅС‹С… ##
+;------------------------- Р¤СѓРЅРєС†РёСЏ СЃРѕР·РґР°РЅРёСЏ РёР»Рё СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ Р°РґСЂРµСЃРѕРІ РґР°РЅРЅС‹С… --
 (defun DataAddr (/)
-	(prompt "\n")
-	(if (= (vla-get-ActiveSpace ActiveDoc) 1)
-		(dcl_Form_Show k410odcl_DataAddrDialog);then
-		(alert "Функция реализована только для объектов пространства модели");else
-	)
-	(princ)
-;Обновить, если созданы новые атрибуты
-	(if NewAttrFlag 
-		(progn
-			(command "_.battman"))
-			(setq NewAttrFlag F)
-		)
+    (prompt "\n")
+    (if (= (vla-get-ActiveSpace ActiveDoc) 1)
+        (dcl_Form_Show k410odcl_DataAddrDialog);then
+        (alert "Р¤СѓРЅРєС†РёСЏ СЂРµР°Р»РёР·РѕРІР°РЅР° С‚РѕР»СЊРєРѕ РґР»СЏ РѕР±СЉРµРєС‚РѕРІ РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІР° РјРѕРґРµР»Рё");else
+    )
+    (princ)
+;РћР±РЅРѕРІРёС‚СЊ, РµСЃР»Рё СЃРѕР·РґР°РЅС‹ РЅРѕРІС‹Рµ Р°С‚СЂРёР±СѓС‚С‹
+    (if NewAttrFlag 
+        (progn
+            (command "_.battman"))
+            (setq NewAttrFlag F)
+        )
 )
-;------------------------- Функция создания или редактирования адресов данных --
+;------------------------- Р¤СѓРЅРєС†РёСЏ СЃРѕР·РґР°РЅРёСЏ РёР»Рё СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ Р°РґСЂРµСЃРѕРІ РґР°РЅРЅС‹С… --
 
-;------------------------------------------------------ Инициализация диалога --
+;------------------------------------------------------ РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РґРёР°Р»РѕРіР° --
 (defun c:k410odcl_DataAddrDialog_OnInitialize (/ _Index)
-;Инициализация переменных
-	(InitBlock)
-;Сброс элементов и флагов управления
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldNameLabel "Enabled" F)
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldComboBox "Enabled" F)
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldComboBox "Text" FieldTXT)
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_AddRecordButton "Enabled" F)
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_DelRecordButton "Enabled" F)
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_SaveButton "Enabled" F)
-	(dcl_Grid_Clear k410odcl_DataAddrDialog_Grid)
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_LabelUDLFilePrompt "Caption" TagUDLFile)
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_LabelTableNamePrompt "Caption" TagTableName)
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_LabelKeyFieldPrompt "Caption" TagKeyFieldName)
-;Сброс переменных
-	(setq _Index 0)
-;Запись списка имен видимых атрибутов
-	(repeat (length AttrList)
-		(dcl_Grid_AddRow k410odcl_DataAddrDialog_Grid (nth _Index AttrList) (nth _Index AttrFieldsList))
-		(if (/= (nth _Index AttrFieldsList) "") (dcl_Control_SetProperty k410odcl_DataAddrDialog_DelRecordButton "Enabled" T))
-		(setq _Index (1+ _Index))
-	)
-;Загрузка набора данных
-	(GetRecordSet)
-	(if (not (null CurColumnList))
-		(progn
-			(dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldNameLabel "Enabled" T)
-			(dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldComboBox "Enabled" T)
-			(dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldComboBox "List" CurColumnList)
-		)
-	) 
+;РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїРµСЂРµРјРµРЅРЅС‹С…
+    (InitBlock)
+;РЎР±СЂРѕСЃ СЌР»РµРјРµРЅС‚РѕРІ Рё С„Р»Р°РіРѕРІ СѓРїСЂР°РІР»РµРЅРёСЏ
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldNameLabel "Enabled" F)
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldComboBox "Enabled" F)
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldComboBox "Text" FieldTXT)
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_AddRecordButton "Enabled" F)
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_DelRecordButton "Enabled" F)
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_SaveButton "Enabled" F)
+    (dcl_Grid_Clear k410odcl_DataAddrDialog_Grid)
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_LabelUDLFilePrompt "Caption" TagUDLFile)
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_LabelTableNamePrompt "Caption" TagTableName)
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_LabelKeyFieldPrompt "Caption" TagKeyFieldName)
+;РЎР±СЂРѕСЃ РїРµСЂРµРјРµРЅРЅС‹С…
+    (setq _Index 0)
+;Р—Р°РїРёСЃСЊ СЃРїРёСЃРєР° РёРјРµРЅ РІРёРґРёРјС‹С… Р°С‚СЂРёР±СѓС‚РѕРІ
+    (repeat (length AttrList)
+        (dcl_Grid_AddRow k410odcl_DataAddrDialog_Grid (nth _Index AttrList) (nth _Index AttrFieldsList))
+        (if (/= (nth _Index AttrFieldsList) "") (dcl_Control_SetProperty k410odcl_DataAddrDialog_DelRecordButton "Enabled" T))
+        (setq _Index (1+ _Index))
+    )
+;Р—Р°РіСЂСѓР·РєР° РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С…
+    (GetRecordSet)
+    (if (not (null CurColumnList))
+        (progn
+            (dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldNameLabel "Enabled" T)
+            (dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldComboBox "Enabled" T)
+            (dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldComboBox "List" CurColumnList)
+        )
+    ) 
 )
-;------------------------------------------------------ Инициализация диалога --
+;------------------------------------------------------ РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РґРёР°Р»РѕРіР° --
 
-;----------------------------------------------------- Событие изменения поля --
+;----------------------------------------------------- РЎРѕР±С‹С‚РёРµ РёР·РјРµРЅРµРЅРёСЏ РїРѕР»СЏ --
 (defun c:k410odcl_DataAddrDialog_FieldComboBox_OnSelChanged (ItemIndexOrCount Value /)
-;Включение кнопки "Добавить запись"
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_AddRecordButton "Enabled" T)
+;Р’РєР»СЋС‡РµРЅРёРµ РєРЅРѕРїРєРё "Р”РѕР±Р°РІРёС‚СЊ Р·Р°РїРёСЃСЊ"
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_AddRecordButton "Enabled" T)
 )
-;----------------------------------------------------- Событие изменения поля --
+;----------------------------------------------------- РЎРѕР±С‹С‚РёРµ РёР·РјРµРЅРµРЅРёСЏ РїРѕР»СЏ --
 
-;--------------------------------------------------- Кнопка "Источник данных" --
+;--------------------------------------------------- РљРЅРѕРїРєР° "РСЃС‚РѕС‡РЅРёРє РґР°РЅРЅС‹С…" --
 (defun c:k410odcl_DataAddrDialog_DSNameButton_OnClicked (/ _Index)
-;Открытие диалога по выбору нового источника данных
-	(dcl_Form_Show k410odcl_OpenUDLForm)
-;Сброс элементов управления и очистка адресов данных, если изменился источник
-;данных
-	(if (= _DSChangeFlag T)
+;РћС‚РєСЂС‹С‚РёРµ РґРёР°Р»РѕРіР° РїРѕ РІС‹Р±РѕСЂСѓ РЅРѕРІРѕРіРѕ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+    (dcl_Form_Show k410odcl_OpenUDLForm)
+;РЎР±СЂРѕСЃ СЌР»РµРјРµРЅС‚РѕРІ СѓРїСЂР°РІР»РµРЅРёСЏ Рё РѕС‡РёСЃС‚РєР° Р°РґСЂРµСЃРѕРІ РґР°РЅРЅС‹С…, РµСЃР»Рё РёР·РјРµРЅРёР»СЃСЏ РёСЃС‚РѕС‡РЅРёРє
+;РґР°РЅРЅС‹С…
+    (if (= _DSChangeFlag T)
 ;then
-		(progn
-			(dcl_Control_SetProperty k410odcl_DataAddrDialog_AddRecordButton "Enabled" F)
-			(dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldComboBox "Text" FieldTXT)
+        (progn
+            (dcl_Control_SetProperty k410odcl_DataAddrDialog_AddRecordButton "Enabled" F)
+            (dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldComboBox "Text" FieldTXT)
 
-			(if (= _DSClearAddr T)
-				(progn
-					(dcl_Control_SetProperty k410odcl_DataAddrDialog_DelRecordButton "Enabled" F)
-					(setq _Index 0)
-						(repeat (length (dcl_Grid_GetColumnCells k410odcl_DataAddrDialog_Grid 0))
-							(dcl_Grid_SetCellText k410odcl_DataAddrDialog_Grid _Index 1 "")
-							(setq _Index (1+ _Index))
-						)
-				)
-			)
-		)
-	)  
+            (if (= _DSClearAddr T)
+                (progn
+                    (dcl_Control_SetProperty k410odcl_DataAddrDialog_DelRecordButton "Enabled" F)
+                    (setq _Index 0)
+                        (repeat (length (dcl_Grid_GetColumnCells k410odcl_DataAddrDialog_Grid 0))
+                            (dcl_Grid_SetCellText k410odcl_DataAddrDialog_Grid _Index 1 "")
+                            (setq _Index (1+ _Index))
+                        )
+                )
+            )
+        )
+    )  
 )
-;--------------------------------------------------- Кнопка "Источник данных" --
+;--------------------------------------------------- РљРЅРѕРїРєР° "РСЃС‚РѕС‡РЅРёРє РґР°РЅРЅС‹С…" --
 
-;--------------------------------------------------- Кнопка "Добавить запись" --
-(defun c:k410odcl_DataAddrDialog_AddRecordButton_OnClicked (/	_Attr
-																_Field
-																_Row)
-;Загрузка имени поля
-	(setq 	_Field (dcl_Control_GetProperty k410odcl_DataAddrDialog_FieldComboBox "Text")
-;Получение номера строки
-			_Row (car (dcl_Grid_GetCurCell k410odcl_DataAddrDialog_Grid)))
-;Сохранение записи в таблице
-	(if (/= _Row -1)
+;--------------------------------------------------- РљРЅРѕРїРєР° "Р”РѕР±Р°РІРёС‚СЊ Р·Р°РїРёСЃСЊ" --
+(defun c:k410odcl_DataAddrDialog_AddRecordButton_OnClicked (/ _Attr
+                                                              _Field
+                                                              _Row)
+;Р—Р°РіСЂСѓР·РєР° РёРјРµРЅРё РїРѕР»СЏ
+    (setq     _Field (dcl_Control_GetProperty k410odcl_DataAddrDialog_FieldComboBox "Text")
+;РџРѕР»СѓС‡РµРЅРёРµ РЅРѕРјРµСЂР° СЃС‚СЂРѕРєРё
+            _Row (car (dcl_Grid_GetCurCell k410odcl_DataAddrDialog_Grid)))
+;РЎРѕС…СЂР°РЅРµРЅРёРµ Р·Р°РїРёСЃРё РІ С‚Р°Р±Р»РёС†Рµ
+    (if (/= _Row -1)
 ;then
-		(progn 
-			(dcl_Grid_SetCellText k410odcl_DataAddrDialog_Grid _Row 1 _Field)
-;Отображение кнопки "Удалить запись"
+        (progn 
+            (dcl_Grid_SetCellText k410odcl_DataAddrDialog_Grid _Row 1 _Field)
+;РћС‚РѕР±СЂР°Р¶РµРЅРёРµ РєРЅРѕРїРєРё "РЈРґР°Р»РёС‚СЊ Р·Р°РїРёСЃСЊ"
    
-			(dcl_Control_SetProperty k410odcl_DataAddrDialog_DelRecordButton "Enabled" T)
-		)
-	)
-;Отображение кнопки "Сохранить"
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_SaveButton "Enabled" T)
+            (dcl_Control_SetProperty k410odcl_DataAddrDialog_DelRecordButton "Enabled" T)
+        )
+    )
+;РћС‚РѕР±СЂР°Р¶РµРЅРёРµ РєРЅРѕРїРєРё "РЎРѕС…СЂР°РЅРёС‚СЊ"
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_SaveButton "Enabled" T)
 )
-;--------------------------------------------------- Кнопка "Добавить запись" --
+;--------------------------------------------------- РљРЅРѕРїРєР° "Р”РѕР±Р°РІРёС‚СЊ Р·Р°РїРёСЃСЊ" --
 
-;---------------------------------------------------- Кнопка "Удалить запись" --
-(defun c:k410odcl_DataAddrDialog_DelRecordButton_OnClicked (/	_Row
-																_СellList)
-;Получение номера строки
-	(setq _Row (car (dcl_Grid_GetCurCell k410odcl_DataAddrDialog_Grid)))
-;Очистка записи
-	(dcl_Grid_SetCellText k410odcl_DataAddrDialog_Grid _Row 1 "")
-;Включение кнопки "Сохранить"
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_SaveButton "Enabled" T)
-;Проверка на пустые записи и отключение кнопки, если все записи удалены
-	(setq _СellList (dcl_Grid_GetColumnCells k410odcl_DataAddrDialog_Grid 1))
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_DelRecordButton "Enabled" F)
-	(repeat (length _СellList)
-		(if (/= (car _СellList) "")
+;---------------------------------------------------- РљРЅРѕРїРєР° "РЈРґР°Р»РёС‚СЊ Р·Р°РїРёСЃСЊ" --
+(defun c:k410odcl_DataAddrDialog_DelRecordButton_OnClicked (/ _Row
+                                                              _РЎellList)
+;РџРѕР»СѓС‡РµРЅРёРµ РЅРѕРјРµСЂР° СЃС‚СЂРѕРєРё
+    (setq _Row (car (dcl_Grid_GetCurCell k410odcl_DataAddrDialog_Grid)))
+;РћС‡РёСЃС‚РєР° Р·Р°РїРёСЃРё
+    (dcl_Grid_SetCellText k410odcl_DataAddrDialog_Grid _Row 1 "")
+;Р’РєР»СЋС‡РµРЅРёРµ РєРЅРѕРїРєРё "РЎРѕС…СЂР°РЅРёС‚СЊ"
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_SaveButton "Enabled" T)
+;РџСЂРѕРІРµСЂРєР° РЅР° РїСѓСЃС‚С‹Рµ Р·Р°РїРёСЃРё Рё РѕС‚РєР»СЋС‡РµРЅРёРµ РєРЅРѕРїРєРё, РµСЃР»Рё РІСЃРµ Р·Р°РїРёСЃРё СѓРґР°Р»РµРЅС‹
+    (setq _РЎellList (dcl_Grid_GetColumnCells k410odcl_DataAddrDialog_Grid 1))
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_DelRecordButton "Enabled" F)
+    (repeat (length _РЎellList)
+        (if (/= (car _РЎellList) "")
 ;then
-			(dcl_Control_SetProperty k410odcl_DataAddrDialog_DelRecordButton "Enabled" T)
-		)
-		(setq _СellList (cdr _СellList))
-	)
-;Отображение кнопки "Сохранить"
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_SaveButton "Enabled" T)  
+            (dcl_Control_SetProperty k410odcl_DataAddrDialog_DelRecordButton "Enabled" T)
+        )
+        (setq _РЎellList (cdr _РЎellList))
+    )
+;РћС‚РѕР±СЂР°Р¶РµРЅРёРµ РєРЅРѕРїРєРё "РЎРѕС…СЂР°РЅРёС‚СЊ"
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_SaveButton "Enabled" T)  
 )
-;---------------------------------------------------- Кнопка "Удалить запись" --
+;---------------------------------------------------- РљРЅРѕРїРєР° "РЈРґР°Р»РёС‚СЊ Р·Р°РїРёСЃСЊ" --
 
-;--------------------------------------------------------- Кнопка "Сохранить" --
-(defun c:k410odcl_DataAddrDialog_SaveButton_OnClicked (/	_AttrIndex
-															_Index
-															_AttrList
-															_FieldList
-															_AttrName)
-;Поиск атрибута UDLFile
-	(setq _AttrIndex (vl-position AttrUDLFile ConstAttrList))
-;Запись значения UDLFile
-	(if (null _AttrIndex)
+;--------------------------------------------------------- РљРЅРѕРїРєР° "РЎРѕС…СЂР°РЅРёС‚СЊ" --
+(defun c:k410odcl_DataAddrDialog_SaveButton_OnClicked (/ _AttrIndex
+                                                         _Index
+                                                         _AttrList
+                                                         _FieldList
+                                                         _AttrName)
+;РџРѕРёСЃРє Р°С‚СЂРёР±СѓС‚Р° UDLFile
+    (setq _AttrIndex (vl-position AttrUDLFile ConstAttrList))
+;Р—Р°РїРёСЃСЊ Р·РЅР°С‡РµРЅРёСЏ UDLFile
+    (if (null _AttrIndex)
 ;then
-;Создание атрибута UDL файла
-		(setq 	_AttrIndex 
-				(vla-AddAttribute	CurBlock
-									0.001																				;Height
-									(+ 	acAttributeModeInvisible														;Mode
-									acAttributeModeConstant
-									acAttributeModeLockPosition)
-									"k410 ODCL: служебный атрибут"														;Prompt
-									(vlax-safearray-fill (vlax-make-safearray vlax-vbDouble '(0 . 2)) '(0.0 0.0 0.0))	;Insertion point
-									AttrUdlFile																			;Tag
-									TagUDLFile																			;Value
-				)
-				ConstAttrList (append ConstAttrList (list AttrUdlFile))
-				ConstAttrRefList (append ConstAttrRefList (list _AttrIndex))
-;Установка флага создания нового атрибута
-				NewAttrFlag T
-		)
+;РЎРѕР·РґР°РЅРёРµ Р°С‚СЂРёР±СѓС‚Р° UDL С„Р°Р№Р»Р°
+        (setq _AttrIndex 
+              (vla-AddAttribute
+                    CurBlock
+                    0.001                                                                             ;Height
+                    (+ acAttributeModeInvisible                                                       ;Mode
+                       acAttributeModeConstant
+                       acAttributeModeLockPosition)
+                    "k410 ODCL: СЃР»СѓР¶РµР±РЅС‹Р№ Р°С‚СЂРёР±СѓС‚"                                                    ;Prompt
+                    (vlax-safearray-fill (vlax-make-safearray vlax-vbDouble '(0 . 2)) '(0.0 0.0 0.0)) ;Insertion point
+                    AttrUdlFile                                                                       ;Tag
+                    TagUDLFile                                                                        ;Value
+              )
+              ConstAttrList (append ConstAttrList (list AttrUdlFile))
+              ConstAttrRefList (append ConstAttrRefList (list _AttrIndex))
+;РЈСЃС‚Р°РЅРѕРІРєР° С„Р»Р°РіР° СЃРѕР·РґР°РЅРёСЏ РЅРѕРІРѕРіРѕ Р°С‚СЂРёР±СѓС‚Р°
+                NewAttrFlag T
+        )
 ;else
-;Запись в атрибут UDL файла
-		(vla-put-textstring (nth _AttrIndex ConstAttrRefList) TagUDLFile)
-	)
-;Поиск атрибута таблицы источника данных
-	(setq _AttrIndex (vl-position AttrTableName ConstAttrList))
-;Запись значения имени таблицы источника данных
-	(if (null _AttrIndex)
+;Р—Р°РїРёСЃСЊ РІ Р°С‚СЂРёР±СѓС‚ UDL С„Р°Р№Р»Р°
+        (vla-put-textstring (nth _AttrIndex ConstAttrRefList) TagUDLFile)
+    )
+;РџРѕРёСЃРє Р°С‚СЂРёР±СѓС‚Р° С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+    (setq _AttrIndex (vl-position AttrTableName ConstAttrList))
+;Р—Р°РїРёСЃСЊ Р·РЅР°С‡РµРЅРёСЏ РёРјРµРЅРё С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+    (if (null _AttrIndex)
 ;then
-;Создание атрибута имени таблицы источника данных
-		(setq 	_AttrIndex 
-				(vla-AddAttribute	CurBlock
-									0.001																				;Height
-									(+ 	acAttributeModeInvisible														;Mode
-										acAttributeModeConstant
-										acAttributeModeLockPosition)
-									"k410 ODCL: служебный атрибут"														;Prompt
-									(vlax-safearray-fill (vlax-make-safearray vlax-vbDouble '(0 . 2)) '(0.0 0.0 0.0))	;Insertion point
-									AttrTableName																		;Tag
-									TagTableName																		;Value
-				)	 
-				ConstAttrList (append ConstAttrList (list AttrTableName))
-				ConstAttrRefList (append ConstAttrRefList (list _AttrIndex))
-;Установка флага создания нового атрибута
-				NewAttrFlag T
-		)
+;РЎРѕР·РґР°РЅРёРµ Р°С‚СЂРёР±СѓС‚Р° РёРјРµРЅРё С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+        (setq _AttrIndex 
+              (vla-AddAttribute
+                    CurBlock
+                    0.001                                                                             ;Height
+                    (+     acAttributeModeInvisible                                                   ;Mode
+                        acAttributeModeConstant
+                        acAttributeModeLockPosition)
+                    "k410 ODCL: СЃР»СѓР¶РµР±РЅС‹Р№ Р°С‚СЂРёР±СѓС‚"                                                    ;Prompt
+                    (vlax-safearray-fill (vlax-make-safearray vlax-vbDouble '(0 . 2)) '(0.0 0.0 0.0)) ;Insertion point
+                    AttrTableName                                                                     ;Tag
+                    TagTableName                                                                      ;Value
+                )     
+                ConstAttrList (append ConstAttrList (list AttrTableName))
+                ConstAttrRefList (append ConstAttrRefList (list _AttrIndex))
+;РЈСЃС‚Р°РЅРѕРІРєР° С„Р»Р°РіР° СЃРѕР·РґР°РЅРёСЏ РЅРѕРІРѕРіРѕ Р°С‚СЂРёР±СѓС‚Р°
+                NewAttrFlag T
+        )
 ;else
-;Запись в атрибут имени таблицы источника данных
-		(vla-put-textstring (nth _AttrIndex ConstAttrRefList) TagTableName)
-	)
-;Поиск атрибута ключевого поля таблицы источника данных
-	(setq _AttrIndex (vl-position AttrKeyFieldName ConstAttrList))
-;Запись имени ключевого поля таблицы источника данных
-	(if (null _AttrIndex)
+;Р—Р°РїРёСЃСЊ РІ Р°С‚СЂРёР±СѓС‚ РёРјРµРЅРё С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+        (vla-put-textstring (nth _AttrIndex ConstAttrRefList) TagTableName)
+    )
+;РџРѕРёСЃРє Р°С‚СЂРёР±СѓС‚Р° РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+    (setq _AttrIndex (vl-position AttrKeyFieldName ConstAttrList))
+;Р—Р°РїРёСЃСЊ РёРјРµРЅРё РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+    (if (null _AttrIndex)
 ;then
-;Создание атрибута ключевого поля таблицы источника данных
-		(setq 	_AttrIndex 
-				(vla-AddAttribute	CurBlock
-									0.001																				;Height
-									(+ 	acAttributeModeInvisible														;Mode
-										acAttributeModeConstant
-										acAttributeModeLockPosition)
-									"k410 ODCL: служебный атрибут"														;Prompt
-									(vlax-safearray-fill (vlax-make-safearray vlax-vbDouble '(0 . 2)) '(0.0 0.0 0.0))	;Insertion point
-									AttrKeyFieldName																	;Tag
-									TagKeyFieldName																		;Value
-				)
-				ConstAttrList (append ConstAttrList (list AttrKeyFieldName))
-				ConstAttrRefList (append ConstAttrRefList (list _AttrIndex))
-;Установка флага создания нового атрибута
-				NewAttrFlag T
-		)
+;РЎРѕР·РґР°РЅРёРµ Р°С‚СЂРёР±СѓС‚Р° РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+        (setq _AttrIndex 
+              (vla-AddAttribute
+                    CurBlock
+                    0.001                                                                                ;Height
+                    (+     acAttributeModeInvisible                                                        ;Mode
+                        acAttributeModeConstant
+                        acAttributeModeLockPosition)
+                    "k410 ODCL: СЃР»СѓР¶РµР±РЅС‹Р№ Р°С‚СЂРёР±СѓС‚"                                                        ;Prompt
+                    (vlax-safearray-fill (vlax-make-safearray vlax-vbDouble '(0 . 2)) '(0.0 0.0 0.0))    ;Insertion point
+                    AttrKeyFieldName                                                                    ;Tag
+                    TagKeyFieldName                                                                        ;Value
+                )
+                ConstAttrList (append ConstAttrList (list AttrKeyFieldName))
+                ConstAttrRefList (append ConstAttrRefList (list _AttrIndex))
+;РЈСЃС‚Р°РЅРѕРІРєР° С„Р»Р°РіР° СЃРѕР·РґР°РЅРёСЏ РЅРѕРІРѕРіРѕ Р°С‚СЂРёР±СѓС‚Р°
+                NewAttrFlag T
+        )
 ;else
-;Запись в атрибут ключевого поля таблицы источника данных
-		(vla-put-textstring (nth _AttrIndex ConstAttrRefList) TagKeyFieldName)
-	)
-;Запись значения ключевого поля таблицы источника данных
-	(if (null AttrRefKeyFieldValue)
+;Р—Р°РїРёСЃСЊ РІ Р°С‚СЂРёР±СѓС‚ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+        (vla-put-textstring (nth _AttrIndex ConstAttrRefList) TagKeyFieldName)
+    )
+;Р—Р°РїРёСЃСЊ Р·РЅР°С‡РµРЅРёСЏ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+    (if (null AttrRefKeyFieldValue)
 ;then
-;Создание атрибута ключевого поля таблицы источника данных
-		(setq 	_AttrIndex 
-				(vla-AddAttribute	CurBlock
-									0.001																				;Height
-									(+ 	acAttributeModeInvisible														;Mode
-										acAttributeModeLockPosition)
-									"k410 ODCL: служебный атрибут"														;Prompt
-									(vlax-safearray-fill (vlax-make-safearray vlax-vbDouble '(0 . 2)) '(0.0 0.0 0.0))	;Insertion point
-									AttrKeyFieldValue																	;Tag
-									TagKeyFieldValue																	;Value
-				)			
-				AttrRefKeyFieldValue _AttrIndex
-;Установка флага создания нового атрибута
-				NewAttrFlag T
-		)
+;РЎРѕР·РґР°РЅРёРµ Р°С‚СЂРёР±СѓС‚Р° РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+        (setq     _AttrIndex 
+                (vla-AddAttribute    CurBlock
+                                    0.001                                                                                ;Height
+                                    (+     acAttributeModeInvisible                                                        ;Mode
+                                        acAttributeModeLockPosition)
+                                    "k410 ODCL: СЃР»СѓР¶РµР±РЅС‹Р№ Р°С‚СЂРёР±СѓС‚"                                                        ;Prompt
+                                    (vlax-safearray-fill (vlax-make-safearray vlax-vbDouble '(0 . 2)) '(0.0 0.0 0.0))    ;Insertion point
+                                    AttrKeyFieldValue                                                                    ;Tag
+                                    TagKeyFieldValue                                                                    ;Value
+                )            
+                AttrRefKeyFieldValue _AttrIndex
+;РЈСЃС‚Р°РЅРѕРІРєР° С„Р»Р°РіР° СЃРѕР·РґР°РЅРёСЏ РЅРѕРІРѕРіРѕ Р°С‚СЂРёР±СѓС‚Р°
+                NewAttrFlag T
+        )
 ;else
-;Запись в атрибут ключевого поля таблицы источника данных
-		(vla-put-textstring AttrRefKeyFieldValue TagKeyFieldValue)
-	)
-;Инициализацтя пременных
-	(setq 	_Index 0
-			_AttrList (dcl_Grid_GetColumnCells k410odcl_DataAddrDialog_Grid 0)
-			_FieldList (dcl_Grid_GetColumnCells k410odcl_DataAddrDialog_Grid 1)
-;Запись адресов данных
-			_Index 0)
-	(repeat (length _AttrList)
-		(setq 	_AttrName (strcat AttrPrefix (nth _Index _AttrList))
-				_AttrIndex (vl-position _AttrName ConstAttrList))
-		(if (null _AttrIndex)
+;Р—Р°РїРёСЃСЊ РІ Р°С‚СЂРёР±СѓС‚ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+        (vla-put-textstring AttrRefKeyFieldValue TagKeyFieldValue)
+    )
+;РРЅРёС†РёР°Р»РёР·Р°С†С‚СЏ РїСЂРµРјРµРЅРЅС‹С…
+    (setq     _Index 0
+            _AttrList (dcl_Grid_GetColumnCells k410odcl_DataAddrDialog_Grid 0)
+            _FieldList (dcl_Grid_GetColumnCells k410odcl_DataAddrDialog_Grid 1)
+;Р—Р°РїРёСЃСЊ Р°РґСЂРµСЃРѕРІ РґР°РЅРЅС‹С…
+            _Index 0)
+    (repeat (length _AttrList)
+        (setq     _AttrName (strcat AttrPrefix (nth _Index _AttrList))
+                _AttrIndex (vl-position _AttrName ConstAttrList))
+        (if (null _AttrIndex)
 ;then
-;Создание атрибута ключевого поля таблицы источника данных
-			(setq 	_AttrIndex 
-					(vla-AddAttribute	CurBlock
-										0.001																				;Height
-										(+ 	acAttributeModeInvisible														;Mode
-											acAttributeModeConstant
-											acAttributeModeLockPosition)
-										"k410 ODCL: служебный атрибут"														;Prompt
-										(vlax-safearray-fill (vlax-make-safearray vlax-vbDouble '(0 . 2)) '(0.0 0.0 0.0))	;Insertion point
-										_AttrName																			;Tag
-										(nth _Index _FieldList)																;Value
-					)
-					ConstAttrList (append ConstAttrList (list _AttrName))
-					ConstAttrRefList (append ConstAttrRefList (list _AttrIndex))
-;Установка флага создания нового атрибута
-					NewAttrFlag T
-			)
+;РЎРѕР·РґР°РЅРёРµ Р°С‚СЂРёР±СѓС‚Р° РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+            (setq     _AttrIndex 
+                    (vla-AddAttribute    CurBlock
+                                        0.001                                                                                ;Height
+                                        (+     acAttributeModeInvisible                                                        ;Mode
+                                            acAttributeModeConstant
+                                            acAttributeModeLockPosition)
+                                        "k410 ODCL: СЃР»СѓР¶РµР±РЅС‹Р№ Р°С‚СЂРёР±СѓС‚"                                                        ;Prompt
+                                        (vlax-safearray-fill (vlax-make-safearray vlax-vbDouble '(0 . 2)) '(0.0 0.0 0.0))    ;Insertion point
+                                        _AttrName                                                                            ;Tag
+                                        (nth _Index _FieldList)                                                                ;Value
+                    )
+                    ConstAttrList (append ConstAttrList (list _AttrName))
+                    ConstAttrRefList (append ConstAttrRefList (list _AttrIndex))
+;РЈСЃС‚Р°РЅРѕРІРєР° С„Р»Р°РіР° СЃРѕР·РґР°РЅРёСЏ РЅРѕРІРѕРіРѕ Р°С‚СЂРёР±СѓС‚Р°
+                    NewAttrFlag T
+            )
 ;else
-;Запись в атрибут значения поля таблицы источника данных
-			(vla-put-textstring (nth _AttrIndex ConstAttrRefList) (nth _Index _FieldList))
-		)
-		(setq _Index (1+ _Index))
-	)
-;Отключение кнопки "Сохранить
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_SaveButton "Enabled" F)  
+;Р—Р°РїРёСЃСЊ РІ Р°С‚СЂРёР±СѓС‚ Р·РЅР°С‡РµРЅРёСЏ РїРѕР»СЏ С‚Р°Р±Р»РёС†С‹ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+            (vla-put-textstring (nth _AttrIndex ConstAttrRefList) (nth _Index _FieldList))
+        )
+        (setq _Index (1+ _Index))
+    )
+;РћС‚РєР»СЋС‡РµРЅРёРµ РєРЅРѕРїРєРё "РЎРѕС…СЂР°РЅРёС‚СЊ
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_SaveButton "Enabled" F)  
 )
-;--------------------------------------------------------- Кнопка "Сохранить" --
+;--------------------------------------------------------- РљРЅРѕРїРєР° "РЎРѕС…СЂР°РЅРёС‚СЊ" --
 
-;----------------------------------------------------------- Кнопка "Закрыть" --
+;----------------------------------------------------------- РљРЅРѕРїРєР° "Р—Р°РєСЂС‹С‚СЊ" --
 (defun c:k410odcl_DataAddrDialog_CancelButton_OnClicked (/)
-	(dcl_Form_Close k410odcl_DataAddrDialog 2)
+    (dcl_Form_Close k410odcl_DataAddrDialog 2)
 )
-;----------------------------------------------------------- Кнопка "Закрыть" --
+;----------------------------------------------------------- РљРЅРѕРїРєР° "Р—Р°РєСЂС‹С‚СЊ" --
 
-;------------------ Закрытие диалога "Открыть файл описания источника данных" --
-(defun c:k410odcl_OpenUDLForm_OnClose (	UpperLeftX
-										UpperLeftY /	_ConnectionObj
-														_View)
-;Загрузка полного имени (включая путь) файла UDL источника данных
-	(setq TagUDLFile (dcl_FileExplorer_GetPathName k410odcl_OpenUDLForm_FileExplorer))
-;Проверка длины имени UDL файла источника данных
-	(if (> (strlen TagUDLFile) 255)
-		(progn
-			(dcl_MessageBox	"Длина полного имени файла UDL источника данных (включая путь)\n не должна превышать 255 символов."
-							ErrorTitleTxt
-							2 4)
-			(setq TagUDLFile "")
-		)  
-	)
-;Сброс флага выбора нового источника данных
-	(setq _DSChangeFlag F)
-;Подключение источника данных
-	(if (/= TagUDLFile "")
+;------------------ Р—Р°РєСЂС‹С‚РёРµ РґРёР°Р»РѕРіР° "РћС‚РєСЂС‹С‚СЊ С„Р°Р№Р» РѕРїРёСЃР°РЅРёСЏ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…" --
+(defun c:k410odcl_OpenUDLForm_OnClose (    UpperLeftX
+                                        UpperLeftY /    _ConnectionObj
+                                                        _View)
+;Р—Р°РіСЂСѓР·РєР° РїРѕР»РЅРѕРіРѕ РёРјРµРЅРё (РІРєР»СЋС‡Р°СЏ РїСѓС‚СЊ) С„Р°Р№Р»Р° UDL РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+    (setq TagUDLFile (dcl_FileExplorer_GetPathName k410odcl_OpenUDLForm_FileExplorer))
+;РџСЂРѕРІРµСЂРєР° РґР»РёРЅС‹ РёРјРµРЅРё UDL С„Р°Р№Р»Р° РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+    (if (> (strlen TagUDLFile) 255)
+        (progn
+            (dcl_MessageBox    "Р”Р»РёРЅР° РїРѕР»РЅРѕРіРѕ РёРјРµРЅРё С„Р°Р№Р»Р° UDL РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С… (РІРєР»СЋС‡Р°СЏ РїСѓС‚СЊ)\n РЅРµ РґРѕР»Р¶РЅР° РїСЂРµРІС‹С€Р°С‚СЊ 255 СЃРёРјРІРѕР»РѕРІ."
+                            ErrorTitleTxt
+                            2 4)
+            (setq TagUDLFile "")
+        )  
+    )
+;РЎР±СЂРѕСЃ С„Р»Р°РіР° РІС‹Р±РѕСЂР° РЅРѕРІРѕРіРѕ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+    (setq _DSChangeFlag F)
+;РџРѕРґРєР»СЋС‡РµРЅРёРµ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+    (if (/= TagUDLFile "")
 ;then
-;Подключение к источнику данных
-		(progn
-			(prompt "Подключение к источнику данных\n")
-			(setq _ConnectionObj (ADOLISP_ConnectToDB TagUDLFile "" ""))
-			(if (null _ConnectionObj)
+;РџРѕРґРєР»СЋС‡РµРЅРёРµ Рє РёСЃС‚РѕС‡РЅРёРєСѓ РґР°РЅРЅС‹С…
+        (progn
+            (prompt "РџРѕРґРєР»СЋС‡РµРЅРёРµ Рє РёСЃС‚РѕС‡РЅРёРєСѓ РґР°РЅРЅС‹С…\n")
+            (setq _ConnectionObj (ADOLISP_ConnectToDB TagUDLFile "" ""))
+            (if (null _ConnectionObj)
 ;then
-				(k410_ErrorPrinter)
+                (k410_ErrorPrinter)
 ;else
-				(progn
-;Отображение диалога выбора источника данных
-					(dcl_Form_Show k410odcl_DSChoiceDialog)
-;Закрытие соединения
-					(ADOLISP_DisconnectFromDB _ConnectionObj)
-				)  
-			)	
-		)
+                (progn
+;РћС‚РѕР±СЂР°Р¶РµРЅРёРµ РґРёР°Р»РѕРіР° РІС‹Р±РѕСЂР° РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+                    (dcl_Form_Show k410odcl_DSChoiceDialog)
+;Р—Р°РєСЂС‹С‚РёРµ СЃРѕРµРґРёРЅРµРЅРёСЏ
+                    (ADOLISP_DisconnectFromDB _ConnectionObj)
+                )  
+            )    
+        )
 ;else
-		(princ)
-	)
+        (princ)
+    )
 )
-;------------------ Закрытие диалога "Открыть файл описания источника данных" --
+;------------------ Р—Р°РєСЂС‹С‚РёРµ РґРёР°Р»РѕРіР° "РћС‚РєСЂС‹С‚СЊ С„Р°Р№Р» РѕРїРёСЃР°РЅРёСЏ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…" --
 
-;---------------------- Инициализация диалога выбора таблицы и ключевого поля --
-;Диалог открывается, если соединение было создано
-(defun c:k410odcl_DSChoiceDialog_OnInitialize (/	_TV
-													_TablesAndViews)
-;Загрузка перечня таблиц и запросов
+;---------------------- РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РґРёР°Р»РѕРіР° РІС‹Р±РѕСЂР° С‚Р°Р±Р»РёС†С‹ Рё РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ --
+;Р”РёР°Р»РѕРі РѕС‚РєСЂС‹РІР°РµС‚СЃСЏ, РµСЃР»Рё СЃРѕРµРґРёРЅРµРЅРёРµ Р±С‹Р»Рѕ СЃРѕР·РґР°РЅРѕ
+(defun c:k410odcl_DSChoiceDialog_OnInitialize (/    _TV
+                                                    _TablesAndViews)
+;Р—Р°РіСЂСѓР·РєР° РїРµСЂРµС‡РЅСЏ С‚Р°Р±Р»РёС† Рё Р·Р°РїСЂРѕСЃРѕРІ
 
-	(setq 	_TV (ADOLISP_GetTablesAndViews _ConnectionObj)
-			_TablesAndViews (append (nth 0 _TV) (nth 1 _TV)))
-;Запись перечня таблиц и запросов в выпадающий список
-	(dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSTableComboBox "List" _TablesAndViews)
-;Сброс текстовых полей выпадающих списков, кнопок
-	(dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSTableComboBox "Text" TableViewTXT)
-	(dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "Text" KeyFieldTXT)
-	(dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "Enabled" F)
-	(dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldLabel "Enabled" F)
-	(dcl_Control_SetProperty k410odcl_DSChoiceDialog_OkButton "Enabled" F)
+    (setq     _TV (ADOLISP_GetTablesAndViews _ConnectionObj)
+            _TablesAndViews (append (nth 0 _TV) (nth 1 _TV)))
+;Р—Р°РїРёСЃСЊ РїРµСЂРµС‡РЅСЏ С‚Р°Р±Р»РёС† Рё Р·Р°РїСЂРѕСЃРѕРІ РІ РІС‹РїР°РґР°СЋС‰РёР№ СЃРїРёСЃРѕРє
+    (dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSTableComboBox "List" _TablesAndViews)
+;РЎР±СЂРѕСЃ С‚РµРєСЃС‚РѕРІС‹С… РїРѕР»РµР№ РІС‹РїР°РґР°СЋС‰РёС… СЃРїРёСЃРєРѕРІ, РєРЅРѕРїРѕРє
+    (dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSTableComboBox "Text" TableViewTXT)
+    (dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "Text" KeyFieldTXT)
+    (dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "Enabled" F)
+    (dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldLabel "Enabled" F)
+    (dcl_Control_SetProperty k410odcl_DSChoiceDialog_OkButton "Enabled" F)
 )
-;---------------------- Инициализация диалога выбора таблицы и ключевого поля --
+;---------------------- РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РґРёР°Р»РѕРіР° РІС‹Р±РѕСЂР° С‚Р°Р±Р»РёС†С‹ Рё РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ --
 
-;------------------------------------------------ Событие смены имени таблицы --
-(defun c:k410odcl_DSChoiceDialog_DSTableComboBox_OnSelChanged (	ItemIndexOrCount 
-																Value / _CL)
-;Сброс текстового поля выпадающего списка
-	(dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "Text" KeyFieldTXT)
-;Получение списка полей таблицы или запроса
-	(setq _CL (ADOLISP_GetColumns _ConnectionObj Value))
-	(if (null _CL)
+;------------------------------------------------ РЎРѕР±С‹С‚РёРµ СЃРјРµРЅС‹ РёРјРµРЅРё С‚Р°Р±Р»РёС†С‹ --
+(defun c:k410odcl_DSChoiceDialog_DSTableComboBox_OnSelChanged (    ItemIndexOrCount 
+                                                                Value / _CL)
+;РЎР±СЂРѕСЃ С‚РµРєСЃС‚РѕРІРѕРіРѕ РїРѕР»СЏ РІС‹РїР°РґР°СЋС‰РµРіРѕ СЃРїРёСЃРєР°
+    (dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "Text" KeyFieldTXT)
+;РџРѕР»СѓС‡РµРЅРёРµ СЃРїРёСЃРєР° РїРѕР»РµР№ С‚Р°Р±Р»РёС†С‹ РёР»Рё Р·Р°РїСЂРѕСЃР°
+    (setq _CL (ADOLISP_GetColumns _ConnectionObj Value))
+    (if (null _CL)
 ;then
-		(progn
-;Сообщение об ошибке
-			(k410_ErrorPrinter)
-;Сброс выпадающего списка
-			(dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "Enabled" F)
-			(dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldLabel "Enabled" F)       
-		)
-;else		
-		(progn
-;Включение выпадающего списка
-			(dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "Enabled" T)
-			(dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldLabel "Enabled" T)
-;Формирование и запись выпадающего списка
-			(setq CurColumnList nil)
-			(foreach _ColName _CL
-				(setq 	CurColumnList (append CurColumnList (list (car _ColName))))
-			)
-			(dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "List" CurColumnList)
-		)
-	)
+        (progn
+;РЎРѕРѕР±С‰РµРЅРёРµ РѕР± РѕС€РёР±РєРµ
+            (k410_ErrorPrinter)
+;РЎР±СЂРѕСЃ РІС‹РїР°РґР°СЋС‰РµРіРѕ СЃРїРёСЃРєР°
+            (dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "Enabled" F)
+            (dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldLabel "Enabled" F)       
+        )
+;else        
+        (progn
+;Р’РєР»СЋС‡РµРЅРёРµ РІС‹РїР°РґР°СЋС‰РµРіРѕ СЃРїРёСЃРєР°
+            (dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "Enabled" T)
+            (dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldLabel "Enabled" T)
+;Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ Рё Р·Р°РїРёСЃСЊ РІС‹РїР°РґР°СЋС‰РµРіРѕ СЃРїРёСЃРєР°
+            (setq CurColumnList nil)
+            (foreach _ColName _CL
+                (setq     CurColumnList (append CurColumnList (list (car _ColName))))
+            )
+            (dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "List" CurColumnList)
+        )
+    )
 )
-;------------------------------------------------ Событие смены имени таблицы --
+;------------------------------------------------ РЎРѕР±С‹С‚РёРµ СЃРјРµРЅС‹ РёРјРµРЅРё С‚Р°Р±Р»РёС†С‹ --
 
-;----------------------------------------------- Событие смены ключевого поля --
+;----------------------------------------------- РЎРѕР±С‹С‚РёРµ СЃРјРµРЅС‹ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ --
 (defun c:k410odcl_DSChoiceDialog_DSKeyFieldComboBox_OnSelChanged (ItemIndexOrCount Value /)
-;Отображение кнопки "Ок"
-	(dcl_Control_SetProperty k410odcl_DSChoiceDialog_OkButton "Enabled" T)
+;РћС‚РѕР±СЂР°Р¶РµРЅРёРµ РєРЅРѕРїРєРё "РћРє"
+    (dcl_Control_SetProperty k410odcl_DSChoiceDialog_OkButton "Enabled" T)
 )
-;----------------------------------------------- Событие смены ключевого поля --
+;----------------------------------------------- РЎРѕР±С‹С‚РёРµ СЃРјРµРЅС‹ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ --
 
-;------------- Кнопка "Ok" и закрытие диалога выбора таблицы и ключевого поля --
-(defun c:k410odcl_DSChoiceDialog_OkButton_OnClicked (/	_View
-														_Col
-														_Str
-														_Prop)
-;Сохранение имени таблицы и ключевого поля
-	(setq 	TagTableName (dcl_Control_GetProperty k410odcl_DSChoiceDialog_DSTableComboBox "Text")
-			TagKeyFieldName (dcl_Control_GetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "Text"))
-;Запись перечня полей в выпадающий список
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldComboBox "List" CurColumnList)
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldNameLabel "Enabled" T)
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldComboBox "Enabled" T)
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_SaveButton "Enabled" T)
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_LabelUDLFilePrompt "Caption" TagUDLFile)
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_LabelTableNamePrompt "Caption" TagTableName)
-	(dcl_Control_SetProperty k410odcl_DataAddrDialog_LabelKeyFieldPrompt "Caption" TagKeyFieldName)  
-;Закрытие диалога с кодом 1 ([Enter])
-	(dcl_Form_Close k410odcl_DSChoiceDialog 1)
-;Установка флага выбора нового источника данных
-	(setq _DSChangeFlag T)
-;Установка флага сброса адресов данных
-	(if (= (dcl_Control_GetProperty k410odcl_DSChoiceDialog_CheckBox "Value") 1)
+;------------- РљРЅРѕРїРєР° "Ok" Рё Р·Р°РєСЂС‹С‚РёРµ РґРёР°Р»РѕРіР° РІС‹Р±РѕСЂР° С‚Р°Р±Р»РёС†С‹ Рё РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ --
+(defun c:k410odcl_DSChoiceDialog_OkButton_OnClicked (/    _View
+                                                        _Col
+                                                        _Str
+                                                        _Prop)
+;РЎРѕС…СЂР°РЅРµРЅРёРµ РёРјРµРЅРё С‚Р°Р±Р»РёС†С‹ Рё РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ
+    (setq     TagTableName (dcl_Control_GetProperty k410odcl_DSChoiceDialog_DSTableComboBox "Text")
+            TagKeyFieldName (dcl_Control_GetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "Text"))
+;Р—Р°РїРёСЃСЊ РїРµСЂРµС‡РЅСЏ РїРѕР»РµР№ РІ РІС‹РїР°РґР°СЋС‰РёР№ СЃРїРёСЃРѕРє
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldComboBox "List" CurColumnList)
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldNameLabel "Enabled" T)
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldComboBox "Enabled" T)
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_SaveButton "Enabled" T)
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_LabelUDLFilePrompt "Caption" TagUDLFile)
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_LabelTableNamePrompt "Caption" TagTableName)
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_LabelKeyFieldPrompt "Caption" TagKeyFieldName)  
+;Р—Р°РєСЂС‹С‚РёРµ РґРёР°Р»РѕРіР° СЃ РєРѕРґРѕРј 1 ([Enter])
+    (dcl_Form_Close k410odcl_DSChoiceDialog 1)
+;РЈСЃС‚Р°РЅРѕРІРєР° С„Р»Р°РіР° РІС‹Р±РѕСЂР° РЅРѕРІРѕРіРѕ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+    (setq _DSChangeFlag T)
+;РЈСЃС‚Р°РЅРѕРІРєР° С„Р»Р°РіР° СЃР±СЂРѕСЃР° Р°РґСЂРµСЃРѕРІ РґР°РЅРЅС‹С…
+    (if (= (dcl_Control_GetProperty k410odcl_DSChoiceDialog_CheckBox "Value") 1)
 ;then
-		(setq _DSClearAddr F)
+        (setq _DSClearAddr F)
 ;else
-		(setq _DSClearAddr T)
-	)
+        (setq _DSClearAddr T)
+    )
 )
-;------------- Кнопка "Ok" и закрытие диалога выбора таблицы и ключевого поля --
-;###################################################### Диалог: адреса данных ##
+;------------- РљРЅРѕРїРєР° "Ok" Рё Р·Р°РєСЂС‹С‚РёРµ РґРёР°Р»РѕРіР° РІС‹Р±РѕСЂР° С‚Р°Р±Р»РёС†С‹ Рё РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ --
+;###################################################### Р”РёР°Р»РѕРі: Р°РґСЂРµСЃР° РґР°РЅРЅС‹С… ##
 
-;####################################################### Диалог: выбор записи ##
+;####################################################### Р”РёР°Р»РѕРі: РІС‹Р±РѕСЂ Р·Р°РїРёСЃРё ##
 (defun ChoiceRecord (/)
-	(prompt "\n")
-	(if (= (vla-get-ActiveSpace ActiveDoc) 1)
-		(dcl_Form_Show k410odcl_ChoiceRecordDialog);then
-		(alert "Функция реализована только для объектов пространства модели");else
-	)
-	(princ)
+    (prompt "\n")
+    (if (= (vla-get-ActiveSpace ActiveDoc) 1)
+        (dcl_Form_Show k410odcl_ChoiceRecordDialog);then
+        (alert "Р¤СѓРЅРєС†РёСЏ СЂРµР°Р»РёР·РѕРІР°РЅР° С‚РѕР»СЊРєРѕ РґР»СЏ РѕР±СЉРµРєС‚РѕРІ РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІР° РјРѕРґРµР»Рё");else
+    )
+    (princ)
 )
 
 
-;--------------------------------------------------------- Заполнение таблицы --
-(defun FillChoiceRecordDialogTable (/	_Str
-										_KeyPosition)
-;Сброс или установка кнопки "Обновить набор данных"
-	(if (null CurRecordSet)
-		(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_ReloadDSButton "Enabled" F)
-		(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_ReloadDSButton "Enabled" T)
-	)	
-;Удаление колонок предыдущего набора (если они сохранились)	
-	(while (/= (dcl_Grid_GetColumnCount k410odcl_ChoiceRecordDialog_Grid) 0)
-		(dcl_Grid_DeleteColumn k410odcl_ChoiceRecordDialog_Grid 0)
-	)
-;Создание колонок таблицы
-	(if (not (null CurColumnList))
-		(foreach _ColName (reverse CurColumnList)
-			(dcl_Grid_InsertColumn k410odcl_ChoiceRecordDialog_Grid 0 _ColName)
-		)
-	)
-	(if (= TagKeyFieldValue "")
+;--------------------------------------------------------- Р—Р°РїРѕР»РЅРµРЅРёРµ С‚Р°Р±Р»РёС†С‹ --
+(defun FillChoiceRecordDialogTable (/    _Str
+                                        _KeyPosition)
+;РЎР±СЂРѕСЃ РёР»Рё СѓСЃС‚Р°РЅРѕРІРєР° РєРЅРѕРїРєРё "РћР±РЅРѕРІРёС‚СЊ РЅР°Р±РѕСЂ РґР°РЅРЅС‹С…"
+    (if (null CurRecordSet)
+        (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_ReloadDSButton "Enabled" F)
+        (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_ReloadDSButton "Enabled" T)
+    )    
+;РЈРґР°Р»РµРЅРёРµ РєРѕР»РѕРЅРѕРє РїСЂРµРґС‹РґСѓС‰РµРіРѕ РЅР°Р±РѕСЂР° (РµСЃР»Рё РѕРЅРё СЃРѕС…СЂР°РЅРёР»РёСЃСЊ)    
+    (while (/= (dcl_Grid_GetColumnCount k410odcl_ChoiceRecordDialog_Grid) 0)
+        (dcl_Grid_DeleteColumn k410odcl_ChoiceRecordDialog_Grid 0)
+    )
+;РЎРѕР·РґР°РЅРёРµ РєРѕР»РѕРЅРѕРє С‚Р°Р±Р»РёС†С‹
+    (if (not (null CurColumnList))
+        (foreach _ColName (reverse CurColumnList)
+            (dcl_Grid_InsertColumn k410odcl_ChoiceRecordDialog_Grid 0 _ColName)
+        )
+    )
+    (if (= TagKeyFieldValue "")
 ;then
-		(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_KeyFieldTextBox "Text" KeyFieldValueTXT)
+        (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_KeyFieldTextBox "Text" KeyFieldValueTXT)
 ;else
-		(progn
-			(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_KeyFieldTextBox "Text" TagKeyFieldValue)
-;Вычисление позиции ключевого поля в списке значений ключевого поля
-			(setq _KeyPosition (vl-position TagKeyFieldValue CurKeyValueList))
-			(if (null _KeyPosition)
+        (progn
+            (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_KeyFieldTextBox "Text" TagKeyFieldValue)
+;Р’С‹С‡РёСЃР»РµРЅРёРµ РїРѕР·РёС†РёРё РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ РІ СЃРїРёСЃРєРµ Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ
+            (setq _KeyPosition (vl-position TagKeyFieldValue CurKeyValueList))
+            (if (null _KeyPosition)
 ;then
-;Вывод сообщения об ошибке
-				(alert Error_004_TXT)
+;Р’С‹РІРѕРґ СЃРѕРѕР±С‰РµРЅРёСЏ РѕР± РѕС€РёР±РєРµ
+                (alert Error_004_TXT)
 ;else
-				(progn
-;Перемещение курсора на вычисленную позицию
-					(vlax-invoke-method CurRecordSet "Move" _KeyPosition 1)
-;Загрузка строки
-					(setq 	_Str (vlax-invoke-method CurRecordSet "GetString" 2 1 "\t" "\t" nil))
-;Замена в строке повторяющихся последовател	"\t\t" на "\t \t"
-					(repeat (length CurColumnList) (setq _Str (vl-string-subst "\t \t" "\t\t" _Str)))
-;Очистка таблицы от записанных значений
-					(dcl_Grid_Clear k410odcl_ChoiceRecordDialog_Grid)
-;Запись в таблицу загруженной строки
-					(dcl_Grid_AddString k410odcl_ChoiceRecordDialog_Grid _Str)
-;Активация кнопки "Ok"			
-					(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_OkButton "Enabled" T)
-				)
-			)
-		)
-	)
+                (progn
+;РџРµСЂРµРјРµС‰РµРЅРёРµ РєСѓСЂСЃРѕСЂР° РЅР° РІС‹С‡РёСЃР»РµРЅРЅСѓСЋ РїРѕР·РёС†РёСЋ
+                    (vlax-invoke-method CurRecordSet "Move" _KeyPosition 1)
+;Р—Р°РіСЂСѓР·РєР° СЃС‚СЂРѕРєРё
+                    (setq     _Str (vlax-invoke-method CurRecordSet "GetString" 2 1 "\t" "\t" nil))
+;Р—Р°РјРµРЅР° РІ СЃС‚СЂРѕРєРµ РїРѕРІС‚РѕСЂСЏСЋС‰РёС…СЃСЏ РїРѕСЃР»РµРґРѕРІР°С‚РµР»    "\t\t" РЅР° "\t \t"
+                    (repeat (length CurColumnList) (setq _Str (vl-string-subst "\t \t" "\t\t" _Str)))
+;РћС‡РёСЃС‚РєР° С‚Р°Р±Р»РёС†С‹ РѕС‚ Р·Р°РїРёСЃР°РЅРЅС‹С… Р·РЅР°С‡РµРЅРёР№
+                    (dcl_Grid_Clear k410odcl_ChoiceRecordDialog_Grid)
+;Р—Р°РїРёСЃСЊ РІ С‚Р°Р±Р»РёС†Сѓ Р·Р°РіСЂСѓР¶РµРЅРЅРѕР№ СЃС‚СЂРѕРєРё
+                    (dcl_Grid_AddString k410odcl_ChoiceRecordDialog_Grid _Str)
+;РђРєС‚РёРІР°С†РёСЏ РєРЅРѕРїРєРё "Ok"            
+                    (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_OkButton "Enabled" T)
+                )
+            )
+        )
+    )
 )
-;--------------------------------------------------------- Заполнение таблицы --
+;--------------------------------------------------------- Р—Р°РїРѕР»РЅРµРЅРёРµ С‚Р°Р±Р»РёС†С‹ --
 
-;---------------------------------------- Инициализация диалога выбора записи --
+;---------------------------------------- РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РґРёР°Р»РѕРіР° РІС‹Р±РѕСЂР° Р·Р°РїРёСЃРё --
 (defun c:k410odcl_ChoiceRecordDialog_OnInitialize (/)
-;Инициализация переменных	
-	(InitBlock)
-;Запись значений идентификации источника данных
-	(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_LabelUDLFilePrompt "Caption" TagUDLFile)
-	(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_LabelTableNamePrompt "Caption" TagTableName)
-	(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_LabelKeyFieldPrompt "Caption" TagKeyFieldName)
-;Сброс элементов управления
-	(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_SearchButton "Enabled" F)
-	(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_OkButton "Enabled" F)
-;Загрузка набора данных
-	(GetRecordSet)
-;Заполнение таблицы диалога выбора записи
-	(FillChoiceRecordDialogTable)
-;Сброс счетчика обновлений
-	(setq ItemIndex 0)
-;Установка фокуса на поле вводв	
-	(dcl_Control_SetFocus k410odcl_ChoiceRecordDialog_KeyFieldTextBox)
+;РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїРµСЂРµРјРµРЅРЅС‹С…    
+    (InitBlock)
+;Р—Р°РїРёСЃСЊ Р·РЅР°С‡РµРЅРёР№ РёРґРµРЅС‚РёС„РёРєР°С†РёРё РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…
+    (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_LabelUDLFilePrompt "Caption" TagUDLFile)
+    (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_LabelTableNamePrompt "Caption" TagTableName)
+    (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_LabelKeyFieldPrompt "Caption" TagKeyFieldName)
+;РЎР±СЂРѕСЃ СЌР»РµРјРµРЅС‚РѕРІ СѓРїСЂР°РІР»РµРЅРёСЏ
+    (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_SearchButton "Enabled" F)
+    (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_OkButton "Enabled" F)
+;Р—Р°РіСЂСѓР·РєР° РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С…
+    (GetRecordSet)
+;Р—Р°РїРѕР»РЅРµРЅРёРµ С‚Р°Р±Р»РёС†С‹ РґРёР°Р»РѕРіР° РІС‹Р±РѕСЂР° Р·Р°РїРёСЃРё
+    (FillChoiceRecordDialogTable)
+;РЎР±СЂРѕСЃ СЃС‡РµС‚С‡РёРєР° РѕР±РЅРѕРІР»РµРЅРёР№
+    (setq ItemIndex 0)
+;РЈСЃС‚Р°РЅРѕРІРєР° С„РѕРєСѓСЃР° РЅР° РїРѕР»Рµ РІРІРѕРґРІ    
+    (dcl_Control_SetFocus k410odcl_ChoiceRecordDialog_KeyFieldTextBox)
 )
-;---------------------------------------- Инициализация диалога выбора записи --
+;---------------------------------------- РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РґРёР°Р»РѕРіР° РІС‹Р±РѕСЂР° Р·Р°РїРёСЃРё --
 
-;---------------------------------------------- Смена значения ключевого поля --
+;---------------------------------------------- РЎРјРµРЅР° Р·РЅР°С‡РµРЅРёСЏ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ --
 (defun c:k410odcl_ChoiceRecordDialog_KeyFieldTextBox_OnEditChanged (NewValue /)
-;Активация кнопки "Найти"
-	(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_SearchButton "Enabled" T)
-;Сброс кнопки "Ok"			
-	(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_OkButton "Enabled" F) 
+;РђРєС‚РёРІР°С†РёСЏ РєРЅРѕРїРєРё "РќР°Р№С‚Рё"
+    (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_SearchButton "Enabled" T)
+;РЎР±СЂРѕСЃ РєРЅРѕРїРєРё "Ok"            
+    (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_OkButton "Enabled" F) 
 )
-;---------------------------------------------- Смена значения ключевого поля --
+;---------------------------------------------- РЎРјРµРЅР° Р·РЅР°С‡РµРЅРёСЏ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ --
 
-;----------------------------------------------------------- Кнопка "Закрыть" --
+;----------------------------------------------------------- РљРЅРѕРїРєР° "Р—Р°РєСЂС‹С‚СЊ" --
 (defun c:k410odcl_ChoiceRecordDialog_CancelButton_OnClicked (/)
-	(dcl_Form_Close k410odcl_ChoiceRecordDialog)
+    (dcl_Form_Close k410odcl_ChoiceRecordDialog)
 )
-;----------------------------------------------------------- Кнопка "Закрыть" --
+;----------------------------------------------------------- РљРЅРѕРїРєР° "Р—Р°РєСЂС‹С‚СЊ" --
 
-;--------------------------------------------------------------- Поиск записи --
-(defun RecordSearch (/ 	_KeyPosition
-						_Str)
-;Вычисление позиции ключевого поля в списке значений ключевого поля
-	(setq _KeyPosition (vl-position (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_KeyFieldTextBox "Text") CurKeyValueList))
-	(if (null _KeyPosition)
+;--------------------------------------------------------------- РџРѕРёСЃРє Р·Р°РїРёСЃРё --
+(defun RecordSearch (/     _KeyPosition
+                        _Str)
+;Р’С‹С‡РёСЃР»РµРЅРёРµ РїРѕР·РёС†РёРё РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ РІ СЃРїРёСЃРєРµ Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ
+    (setq _KeyPosition (vl-position (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_KeyFieldTextBox "Text") CurKeyValueList))
+    (if (null _KeyPosition)
 ;then
-;Вывод сообщения об ошибке
-		(alert Error_004_TXT)
+;Р’С‹РІРѕРґ СЃРѕРѕР±С‰РµРЅРёСЏ РѕР± РѕС€РёР±РєРµ
+        (alert Error_004_TXT)
 ;else
-		(progn
-;Перемещение курсора на вычисленную позицию
-			(vlax-invoke-method CurRecordSet "Move" _KeyPosition 1)
-;Загрузка строки
-			(setq 	_Str (vlax-invoke-method CurRecordSet "GetString" 2 1 "\t" "\t" nil))
-;Замена в строке повторяющихся последовател	"\t\t" на "\t \t"
-			(repeat (length CurColumnList) (setq _Str (vl-string-subst "\t \t" "\t\t" _Str)))
-;Очистка таблицы от записанных значений
-			(dcl_Grid_Clear k410odcl_ChoiceRecordDialog_Grid)
-;Запись в таблицу загруженной строки
-			(dcl_Grid_AddString k410odcl_ChoiceRecordDialog_Grid _Str)
-;Сброс кнопки "Найти"
-			(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_SearchButton "Enabled" F)
-;Активация кнопки "Ok"			
-			(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_OkButton "Enabled" T)
-		)
-	)
+        (progn
+;РџРµСЂРµРјРµС‰РµРЅРёРµ РєСѓСЂСЃРѕСЂР° РЅР° РІС‹С‡РёСЃР»РµРЅРЅСѓСЋ РїРѕР·РёС†РёСЋ
+            (vlax-invoke-method CurRecordSet "Move" _KeyPosition 1)
+;Р—Р°РіСЂСѓР·РєР° СЃС‚СЂРѕРєРё
+            (setq     _Str (vlax-invoke-method CurRecordSet "GetString" 2 1 "\t" "\t" nil))
+;Р—Р°РјРµРЅР° РІ СЃС‚СЂРѕРєРµ РїРѕРІС‚РѕСЂСЏСЋС‰РёС…СЃСЏ РїРѕСЃР»РµРґРѕРІР°С‚РµР»    "\t\t" РЅР° "\t \t"
+            (repeat (length CurColumnList) (setq _Str (vl-string-subst "\t \t" "\t\t" _Str)))
+;РћС‡РёСЃС‚РєР° С‚Р°Р±Р»РёС†С‹ РѕС‚ Р·Р°РїРёСЃР°РЅРЅС‹С… Р·РЅР°С‡РµРЅРёР№
+            (dcl_Grid_Clear k410odcl_ChoiceRecordDialog_Grid)
+;Р—Р°РїРёСЃСЊ РІ С‚Р°Р±Р»РёС†Сѓ Р·Р°РіСЂСѓР¶РµРЅРЅРѕР№ СЃС‚СЂРѕРєРё
+            (dcl_Grid_AddString k410odcl_ChoiceRecordDialog_Grid _Str)
+;РЎР±СЂРѕСЃ РєРЅРѕРїРєРё "РќР°Р№С‚Рё"
+            (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_SearchButton "Enabled" F)
+;РђРєС‚РёРІР°С†РёСЏ РєРЅРѕРїРєРё "Ok"            
+            (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_OkButton "Enabled" T)
+        )
+    )
 )
-;--------------------------------------------------------------- Поиск записи --
+;--------------------------------------------------------------- РџРѕРёСЃРє Р·Р°РїРёСЃРё --
 
-;------------------------------------------------------------- Кнопка "Найти" --
+;------------------------------------------------------------- РљРЅРѕРїРєР° "РќР°Р№С‚Рё" --
 (defun c:k410odcl_ChoiceRecordDialog_SearchButton_OnClicked (/)
-	(RecordSearch)
+    (RecordSearch)
 )
-;------------------------------------------------------------- Кнопка "Найти" --
+;------------------------------------------------------------- РљРЅРѕРїРєР° "РќР°Р№С‚Рё" --
 
-;------------------------------------------------- Запись значений в атрибуты --
-(defun WriteToAttrs (/	_AttrIndex
-						_ColPos
-						_Layers)
-;Слои документа
-	(setq _Layers (vla-get-Layers ActiveDoc))
-;Запись значений в атрибуты из таблицы
-	(foreach _AttrRef (vlax-safearray->list (vlax-variant-value (vla-GetAttributes CurBlockRef)))
-;Поиск описания атрибута
-		(setq _AttrIndex (vl-position (vla-Get-TagString _AttrRef) AttrList))
-;Запись значения в атрибут
-		(if (not (null _AttrIndex))
+;------------------------------------------------- Р—Р°РїРёСЃСЊ Р·РЅР°С‡РµРЅРёР№ РІ Р°С‚СЂРёР±СѓС‚С‹ --
+(defun WriteToAttrs (/    _AttrIndex
+                        _ColPos
+                        _Layers)
+;РЎР»РѕРё РґРѕРєСѓРјРµРЅС‚Р°
+    (setq _Layers (vla-get-Layers ActiveDoc))
+;Р—Р°РїРёСЃСЊ Р·РЅР°С‡РµРЅРёР№ РІ Р°С‚СЂРёР±СѓС‚С‹ РёР· С‚Р°Р±Р»РёС†С‹
+    (foreach _AttrRef (vlax-safearray->list (vlax-variant-value (vla-GetAttributes CurBlockRef)))
+;РџРѕРёСЃРє РѕРїРёСЃР°РЅРёСЏ Р°С‚СЂРёР±СѓС‚Р°
+        (setq _AttrIndex (vl-position (vla-Get-TagString _AttrRef) AttrList))
+;Р—Р°РїРёСЃСЊ Р·РЅР°С‡РµРЅРёСЏ РІ Р°С‚СЂРёР±СѓС‚
+        (if (not (null _AttrIndex))
 ;then
-			(progn
-;Определение смещения в списке колонок
-				(setq _ColPos (vl-position (nth _AttrIndex AttrFieldsList) CurColumnList))
-				(if (= (vla-get-Lock (vla-Item _Layers (vla-get-Layer _AttrRef))) :vlax-true)
-					(prompt "Атрибут на блокированном слое\n")	;then
-;Запись значения в атрибут
-					(progn	;else
-						(if (not (null _ColPos))
-;then				
-							(vla-Put-TextString _AttrRef (dcl_Grid_GetCellText k410odcl_ChoiceRecordDialog_Grid 0 _ColPos))
+            (progn
+;РћРїСЂРµРґРµР»РµРЅРёРµ СЃРјРµС‰РµРЅРёСЏ РІ СЃРїРёСЃРєРµ РєРѕР»РѕРЅРѕРє
+                (setq _ColPos (vl-position (nth _AttrIndex AttrFieldsList) CurColumnList))
+                (if (= (vla-get-Lock (vla-Item _Layers (vla-get-Layer _AttrRef))) :vlax-true)
+                    (prompt "РђС‚СЂРёР±СѓС‚ РЅР° Р±Р»РѕРєРёСЂРѕРІР°РЅРЅРѕРј СЃР»РѕРµ\n")    ;then
+;Р—Р°РїРёСЃСЊ Р·РЅР°С‡РµРЅРёСЏ РІ Р°С‚СЂРёР±СѓС‚
+                    (progn    ;else
+                        (if (not (null _ColPos))
+;then                
+                            (vla-Put-TextString _AttrRef (dcl_Grid_GetCellText k410odcl_ChoiceRecordDialog_Grid 0 _ColPos))
 ;else
-							(if (= (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_CheckBox2 "Value") 1)
-								(vla-Put-TextString _AttrRef "")
-							)
-						)
-;Запись в атрибут значения ключевого поля
-						(if (not ReloadDataFlag)
+                            (if (= (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_CheckBox2 "Value") 1)
+                                (vla-Put-TextString _AttrRef "")
+                            )
+                        )
+;Р—Р°РїРёСЃСЊ РІ Р°С‚СЂРёР±СѓС‚ Р·РЅР°С‡РµРЅРёСЏ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ
+                        (if (not ReloadDataFlag)
 ;then
-							(vla-Put-TextString AttrRefKeyFieldValue (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_KeyFieldTextBox "Text"))
-						)
-					)
-				)
-			)
-		)
-	)
+                            (vla-Put-TextString AttrRefKeyFieldValue (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_KeyFieldTextBox "Text"))
+                        )
+                    )
+                )
+            )
+        )
+    )
 )
-;------------------------------------------------- Запись значений в атрибуты --
+;------------------------------------------------- Р—Р°РїРёСЃСЊ Р·РЅР°С‡РµРЅРёР№ РІ Р°С‚СЂРёР±СѓС‚С‹ --
 
-;---------------------------------------------------------------- Кнопка "Ok" --
+;---------------------------------------------------------------- РљРЅРѕРїРєР° "Ok" --
 (defun c:k410odcl_ChoiceRecordDialog_OkButton_OnClicked (/)
-	(WriteToAttrs)
-;Отключение кнопки
-	(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_OkButton "Enabled" F)
-;Закрытие диалога
-	(if (= (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_CheckBox1 "Value") 1)
-		(dcl_Form_Close k410odcl_ChoiceRecordDialog)
-	)
+    (WriteToAttrs)
+;РћС‚РєР»СЋС‡РµРЅРёРµ РєРЅРѕРїРєРё
+    (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_OkButton "Enabled" F)
+;Р—Р°РєСЂС‹С‚РёРµ РґРёР°Р»РѕРіР°
+    (if (= (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_CheckBox1 "Value") 1)
+        (dcl_Form_Close k410odcl_ChoiceRecordDialog)
+    )
 )
-;---------------------------------------------------------------- Кнопка "Ok" --
+;---------------------------------------------------------------- РљРЅРѕРїРєР° "Ok" --
 
-;--------------------------------------------- Кнопка "Обновить набор данных" --
+;--------------------------------------------- РљРЅРѕРїРєР° "РћР±РЅРѕРІРёС‚СЊ РЅР°Р±РѕСЂ РґР°РЅРЅС‹С…" --
 (defun c:k410odcl_ChoiceRecodDialog_ReloadDSButton_OnClicked (/)
-;Обновиить набор данных
-	(ReloadRecordSet)
-;Заполнение таблицы диалога выбора записи
-	(FillChoiceRecordDialogTable)
+;РћР±РЅРѕРІРёРёС‚СЊ РЅР°Р±РѕСЂ РґР°РЅРЅС‹С…
+    (ReloadRecordSet)
+;Р—Р°РїРѕР»РЅРµРЅРёРµ С‚Р°Р±Р»РёС†С‹ РґРёР°Р»РѕРіР° РІС‹Р±РѕСЂР° Р·Р°РїРёСЃРё
+    (FillChoiceRecordDialogTable)
 )
-;--------------------------------------------- Кнопка "Обновить набор данных" --
+;--------------------------------------------- РљРЅРѕРїРєР° "РћР±РЅРѕРІРёС‚СЊ РЅР°Р±РѕСЂ РґР°РЅРЅС‹С…" --
 
-;--------------------------------------------------- Кнопка "Обновить данные" --
+;--------------------------------------------------- РљРЅРѕРїРєР° "РћР±РЅРѕРІРёС‚СЊ РґР°РЅРЅС‹Рµ" --
 (defun c:k410odcl_ChoiceRecordDialog_ReloadDataButton_OnClicked (/)
-;Установка флага диалога обновления
-	(setq ReloadFlag ReloadData)
-;Диалог обновления набора данных
-	(prompt "\n")
-;Отображение формы
-	(dcl_Form_Show k410odcl_ReloadDialog)
-;Сброс флага диалога обновления
-	(setq ReloadFlag 0)
+;РЈСЃС‚Р°РЅРѕРІРєР° С„Р»Р°РіР° РґРёР°Р»РѕРіР° РѕР±РЅРѕРІР»РµРЅРёСЏ
+    (setq ReloadFlag ReloadData)
+;Р”РёР°Р»РѕРі РѕР±РЅРѕРІР»РµРЅРёСЏ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С…
+    (prompt "\n")
+;РћС‚РѕР±СЂР°Р¶РµРЅРёРµ С„РѕСЂРјС‹
+    (dcl_Form_Show k410odcl_ReloadDialog)
+;РЎР±СЂРѕСЃ С„Р»Р°РіР° РґРёР°Р»РѕРіР° РѕР±РЅРѕРІР»РµРЅРёСЏ
+    (setq ReloadFlag 0)
 )
-;--------------------------------------------------- Кнопка "Обновить данные" --
+;--------------------------------------------------- РљРЅРѕРїРєР° "РћР±РЅРѕРІРёС‚СЊ РґР°РЅРЅС‹Рµ" --
 
-;----------------------------------- CheckBox "Заполнять атрибуты при ошибке" --
+;----------------------------------- CheckBox "Р—Р°РїРѕР»РЅСЏС‚СЊ Р°С‚СЂРёР±СѓС‚С‹ РїСЂРё РѕС€РёР±РєРµ" --
 (defun c:k410odcl_ChoiceRecordDialog_FillErrorCheckBox_OnClicked (Value /)
-	(if (= Value 1)
-		(progn	;then
-			(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_FillErrorLabel "Enabled" T)
-			(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_FillErrorTextBox "Enabled" T)
-		)
-		(progn	;else
-			(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_FillErrorLabel "Enabled" F)
-			(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_FillErrorTextBox "Enabled" F)
-		)
-	)
+    (if (= Value 1)
+        (progn    ;then
+            (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_FillErrorLabel "Enabled" T)
+            (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_FillErrorTextBox "Enabled" T)
+        )
+        (progn    ;else
+            (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_FillErrorLabel "Enabled" F)
+            (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_FillErrorTextBox "Enabled" F)
+        )
+    )
 )
-;----------------------------------- CheckBox "Заполнять атрибуты при ошибке" --
+;----------------------------------- CheckBox "Р—Р°РїРѕР»РЅСЏС‚СЊ Р°С‚СЂРёР±СѓС‚С‹ РїСЂРё РѕС€РёР±РєРµ" --
 
-;------------------------------------------------------------- Кнопка "Enter" --
+;------------------------------------------------------------- РљРЅРѕРїРєР° "Enter" --
 (defun c:k410odcl_ChoiceRecordDialog_OnOK (/)
   (RecordSearch)
   (WriteToAttrs)
 )
-;------------------------------------------------------------- Кнопка "Enter" -- 
-;####################################################### Диалог: выбор записи ##
+;------------------------------------------------------------- РљРЅРѕРїРєР° "Enter" -- 
+;####################################################### Р”РёР°Р»РѕРі: РІС‹Р±РѕСЂ Р·Р°РїРёСЃРё ##
 
-;################################################### Диалог: массив вхождений ##
+;################################################### Р”РёР°Р»РѕРі: РјР°СЃСЃРёРІ РІС…РѕР¶РґРµРЅРёР№ ##
 (defun BlockRefArray (/)
-	(prompt "\n")
-	(if (= (vla-get-ActiveSpace ActiveDoc) 1)
-		(dcl_Form_Show k410odcl_BlockRefArray);then
-		(alert "Функция реализована только для объектов пространства модели");else
-	)
-	(princ)
+    (prompt "\n")
+    (if (= (vla-get-ActiveSpace ActiveDoc) 1)
+        (dcl_Form_Show k410odcl_BlockRefArray);then
+        (alert "Р¤СѓРЅРєС†РёСЏ СЂРµР°Р»РёР·РѕРІР°РЅР° С‚РѕР»СЊРєРѕ РґР»СЏ РѕР±СЉРµРєС‚РѕРІ РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІР° РјРѕРґРµР»Рё");else
+    )
+    (princ)
 )
 
 
-;------------------------- Инициализация диалога построения массива вхождений --
+;------------------------- РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РґРёР°Р»РѕРіР° РїРѕСЃС‚СЂРѕРµРЅРёСЏ РјР°СЃСЃРёРІР° РІС…РѕР¶РґРµРЅРёР№ --
 (defun c:k410odcl_BlockRefArray_OnInitialize (/)
-;Заполнение полей элементов управления
-	(if (= (dcl_Control_GetProperty k410odcl_BlockRefArray_WidthTextBox "Text") "")
-		(dcl_Control_SetProperty k410odcl_BlockRefArray_WidthTextBox "Text" ArrayWidth))
-		
-	(if (= (dcl_Control_GetProperty k410odcl_BlockRefArray_dYTextBox "Text") "")
-		(dcl_Control_SetProperty k410odcl_BlockRefArray_dYTextBox "Text" ArraydX))
-		
-	(if (= (dcl_Control_GetProperty k410odcl_BlockRefArray_dXTextBox "Text") "")
-		(dcl_Control_SetProperty k410odcl_BlockRefArray_dXTextBox "Text" ArraydY))
+;Р—Р°РїРѕР»РЅРµРЅРёРµ РїРѕР»РµР№ СЌР»РµРјРµРЅС‚РѕРІ СѓРїСЂР°РІР»РµРЅРёСЏ
+    (if (= (dcl_Control_GetProperty k410odcl_BlockRefArray_WidthTextBox "Text") "")
+        (dcl_Control_SetProperty k410odcl_BlockRefArray_WidthTextBox "Text" ArrayWidth))
+        
+    (if (= (dcl_Control_GetProperty k410odcl_BlockRefArray_dYTextBox "Text") "")
+        (dcl_Control_SetProperty k410odcl_BlockRefArray_dYTextBox "Text" ArraydX))
+        
+    (if (= (dcl_Control_GetProperty k410odcl_BlockRefArray_dXTextBox "Text") "")
+        (dcl_Control_SetProperty k410odcl_BlockRefArray_dXTextBox "Text" ArraydY))
 
-;Сброс элементов управления
-	(dcl_Control_SetProperty k410odcl_BlockRefArray_WidthTextBox "Enabled" F)
-	(dcl_Control_SetProperty k410odcl_BlockRefArray_dYTextBox "Enabled" F)
-	(dcl_Control_SetProperty k410odcl_BlockRefArray_dXTextBox "Enabled" F)
-	(dcl_Control_SetProperty k410odcl_BlockRefArray_OkButton "Enabled" F)
-	(dcl_Control_SetProperty k410odcl_BlockRefArray_ReloadDSButton "Enabled" F)
-	(if (= KeyValues nil)
-		(progn
-			(dcl_Control_SetProperty k410odcl_BlockRefArray_OptionButton1 "Value" 1)
-			(dcl_Control_SetProperty k410odcl_BlockRefArray_OptionButton2 "Enabled" F)
-		)
-		(dcl_Control_SetProperty k410odcl_BlockRefArray_OptionButton2 "Enabled" T)
-	)
-;Инициализация блока
-	(InitBlock)
-;Загрузка набора данных
-	(GetRecordSet)
-;Установка элементов управления
-	(if (not (null CurKeyValueList))
-		(progn
-			(dcl_Control_SetProperty k410odcl_BlockRefArray_WidthTextBox "Enabled" T)
-			(dcl_Control_SetProperty k410odcl_BlockRefArray_dYTextBox "Enabled" T)
-			(dcl_Control_SetProperty k410odcl_BlockRefArray_dXTextBox "Enabled" T)
-			(dcl_Control_SetProperty k410odcl_BlockRefArray_OkButton "Enabled" T)
-			(dcl_Control_SetProperty k410odcl_BlockRefArray_ReloadDSButton "Enabled" T)
-		)
-	)
+;РЎР±СЂРѕСЃ СЌР»РµРјРµРЅС‚РѕРІ СѓРїСЂР°РІР»РµРЅРёСЏ
+    (dcl_Control_SetProperty k410odcl_BlockRefArray_WidthTextBox "Enabled" F)
+    (dcl_Control_SetProperty k410odcl_BlockRefArray_dYTextBox "Enabled" F)
+    (dcl_Control_SetProperty k410odcl_BlockRefArray_dXTextBox "Enabled" F)
+    (dcl_Control_SetProperty k410odcl_BlockRefArray_OkButton "Enabled" F)
+    (dcl_Control_SetProperty k410odcl_BlockRefArray_ReloadDSButton "Enabled" F)
+    (if (= KeyValues nil)
+        (progn
+            (dcl_Control_SetProperty k410odcl_BlockRefArray_OptionButton1 "Value" 1)
+            (dcl_Control_SetProperty k410odcl_BlockRefArray_OptionButton2 "Enabled" F)
+        )
+        (dcl_Control_SetProperty k410odcl_BlockRefArray_OptionButton2 "Enabled" T)
+    )
+;РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ Р±Р»РѕРєР°
+    (InitBlock)
+;Р—Р°РіСЂСѓР·РєР° РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С…
+    (GetRecordSet)
+;РЈСЃС‚Р°РЅРѕРІРєР° СЌР»РµРјРµРЅС‚РѕРІ СѓРїСЂР°РІР»РµРЅРёСЏ
+    (if (not (null CurKeyValueList))
+        (progn
+            (dcl_Control_SetProperty k410odcl_BlockRefArray_WidthTextBox "Enabled" T)
+            (dcl_Control_SetProperty k410odcl_BlockRefArray_dYTextBox "Enabled" T)
+            (dcl_Control_SetProperty k410odcl_BlockRefArray_dXTextBox "Enabled" T)
+            (dcl_Control_SetProperty k410odcl_BlockRefArray_OkButton "Enabled" T)
+            (dcl_Control_SetProperty k410odcl_BlockRefArray_ReloadDSButton "Enabled" T)
+        )
+    )
 )
 
-;------------------------- Инициализация диалога построения массива вхождений --
+;------------------------- РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РґРёР°Р»РѕРіР° РїРѕСЃС‚СЂРѕРµРЅРёСЏ РјР°СЃСЃРёРІР° РІС…РѕР¶РґРµРЅРёР№ --
 
-;------------------------------------------------- Создание массива вхождений --
-(defun CreateBlockRefArray (/	_KeyValueList
-								_MSpace
-								_Width
-								_dX
-								_dY
-								_InsPoint
-								_BlockName
-								_BasePoint
-								_Index)
-;Загрузка настроечных переменных массива
-	(setq	_MSpace (vla-get-ModelSpace ActiveDoc)
-			_Width (atoi (dcl_Control_GetProperty k410odcl_BlockRefArray_WidthTextBox "Text"))
-			_dX (atoi (dcl_Control_GetProperty k410odcl_BlockRefArray_dXTextBox "Text"))
-			_dY (atoi (dcl_Control_GetProperty k410odcl_BlockRefArray_dYTextBox "Text"))
-			_BlockName (vla-get-EffectiveName CurBlockRef)
-			ReloadDataFlag T
-			_Index 0)
-;Загрузка списка значений ключей
-	(if (= (dcl_Control_GetProperty k410odcl_BlockRefArray_OptionButton1 "Value") 1)
-		(setq _KeyValueList CurKeyValueList);then
-		(setq _KeyValueList KeyValues);else
-	)
-;Закрытие окна диалога
-	(dcl_Form_Close k410odcl_BlockRefArray)
-;Выбор базовой точки массива
-	(setq 	_InsPoint (getpoint)
-			_BasePoint _InsPoint)
-;Построение массива
-	(foreach _KeyFieldValue _KeyValueList
-;Добавление вхождения
-		(setq 	CurBlockRef (vla-InsertBlock _MSpace (vlax-3d-point _InsPoint) _BlockName 1 1 1 0)
-				_Index (1+ _Index))
-;Инициализация созданного вхождения
-		(InitBlock)
-;Запись значения ключевого поля во вхождение
-		(vla-Put-TextString AttrRefKeyFieldValue _KeyFieldValue)
-;Расчет точки вставки следующего вхождения
-		(if (= _Index _Width)
-			(setq	_Index 0
-					_InsPoint (list (car _BasePoint) (+ (cadr _InsPoint) _dY) 0))
-			(setq _InsPoint (list (+ (car _InsPoint) _dX) (cadr _InsPoint) 0))
-		)
-	)
-	(setq ReloadDataFlag F)
+;------------------------------------------------- РЎРѕР·РґР°РЅРёРµ РјР°СЃСЃРёРІР° РІС…РѕР¶РґРµРЅРёР№ --
+(defun CreateBlockRefArray (/    _KeyValueList
+                                _MSpace
+                                _Width
+                                _dX
+                                _dY
+                                _InsPoint
+                                _BlockName
+                                _BasePoint
+                                _Index)
+;Р—Р°РіСЂСѓР·РєР° РЅР°СЃС‚СЂРѕРµС‡РЅС‹С… РїРµСЂРµРјРµРЅРЅС‹С… РјР°СЃСЃРёРІР°
+    (setq    _MSpace (vla-get-ModelSpace ActiveDoc)
+            _Width (atoi (dcl_Control_GetProperty k410odcl_BlockRefArray_WidthTextBox "Text"))
+            _dX (atoi (dcl_Control_GetProperty k410odcl_BlockRefArray_dXTextBox "Text"))
+            _dY (atoi (dcl_Control_GetProperty k410odcl_BlockRefArray_dYTextBox "Text"))
+            _BlockName (vla-get-EffectiveName CurBlockRef)
+            ReloadDataFlag T
+            _Index 0)
+;Р—Р°РіСЂСѓР·РєР° СЃРїРёСЃРєР° Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµР№
+    (if (= (dcl_Control_GetProperty k410odcl_BlockRefArray_OptionButton1 "Value") 1)
+        (setq _KeyValueList CurKeyValueList);then
+        (setq _KeyValueList KeyValues);else
+    )
+;Р—Р°РєСЂС‹С‚РёРµ РѕРєРЅР° РґРёР°Р»РѕРіР°
+    (dcl_Form_Close k410odcl_BlockRefArray)
+;Р’С‹Р±РѕСЂ Р±Р°Р·РѕРІРѕР№ С‚РѕС‡РєРё РјР°СЃСЃРёРІР°
+    (setq     _InsPoint (getpoint)
+            _BasePoint _InsPoint)
+;РџРѕСЃС‚СЂРѕРµРЅРёРµ РјР°СЃСЃРёРІР°
+    (foreach _KeyFieldValue _KeyValueList
+;Р”РѕР±Р°РІР»РµРЅРёРµ РІС…РѕР¶РґРµРЅРёСЏ
+        (setq     CurBlockRef (vla-InsertBlock _MSpace (vlax-3d-point _InsPoint) _BlockName 1 1 1 0)
+                _Index (1+ _Index))
+;РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ СЃРѕР·РґР°РЅРЅРѕРіРѕ РІС…РѕР¶РґРµРЅРёСЏ
+        (InitBlock)
+;Р—Р°РїРёСЃСЊ Р·РЅР°С‡РµРЅРёСЏ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ РІРѕ РІС…РѕР¶РґРµРЅРёРµ
+        (vla-Put-TextString AttrRefKeyFieldValue _KeyFieldValue)
+;Р Р°СЃС‡РµС‚ С‚РѕС‡РєРё РІСЃС‚Р°РІРєРё СЃР»РµРґСѓСЋС‰РµРіРѕ РІС…РѕР¶РґРµРЅРёСЏ
+        (if (= _Index _Width)
+            (setq    _Index 0
+                    _InsPoint (list (car _BasePoint) (+ (cadr _InsPoint) _dY) 0))
+            (setq _InsPoint (list (+ (car _InsPoint) _dX) (cadr _InsPoint) 0))
+        )
+    )
+    (setq ReloadDataFlag F)
 )
-;------------------------------------------------- Создание массива вхождений --
+;------------------------------------------------- РЎРѕР·РґР°РЅРёРµ РјР°СЃСЃРёРІР° РІС…РѕР¶РґРµРЅРёР№ --
 
-;---------------------------------------------------------------- Кнопка "Ok" --
+;---------------------------------------------------------------- РљРЅРѕРїРєР° "Ok" --
 (defun c:k410odcl_BlockRefArray_OkButton_OnClicked (/)
-	(CreateBlockRefArray)
+    (CreateBlockRefArray)
 )
-;---------------------------------------------------------------- Кнопка "Ok" --
+;---------------------------------------------------------------- РљРЅРѕРїРєР° "Ok" --
 
-;----------------------------------------------------------- Кнопка "Закрыть" --
+;----------------------------------------------------------- РљРЅРѕРїРєР° "Р—Р°РєСЂС‹С‚СЊ" --
 (defun c:k410odcl_BlockRefArray_CancelButton_OnClicked (/)
   (dcl_Form_Close k410odcl_BlockRefArray)
 )
 
-;----------------------------------------------------------- Кнопка "Закрыть" --
+;----------------------------------------------------------- РљРЅРѕРїРєР° "Р—Р°РєСЂС‹С‚СЊ" --
 
-;--------------------------------------------- Кнопка "Обновить набор данных" --
+;--------------------------------------------- РљРЅРѕРїРєР° "РћР±РЅРѕРІРёС‚СЊ РЅР°Р±РѕСЂ РґР°РЅРЅС‹С…" --
 (defun c:k410odcl_BlockRefArray_ReloadDSButton_OnClicked (/)
- ;Обновиить набор данных
-	(ReloadRecordSet)
+ ;РћР±РЅРѕРІРёРёС‚СЊ РЅР°Р±РѕСЂ РґР°РЅРЅС‹С…
+    (ReloadRecordSet)
 )
-;--------------------------------------------- Кнопка "Обновить набор данных" --
+;--------------------------------------------- РљРЅРѕРїРєР° "РћР±РЅРѕРІРёС‚СЊ РЅР°Р±РѕСЂ РґР°РЅРЅС‹С…" --
 
-;------------------------------------------------------------- Кнопка "Enter" --
+;------------------------------------------------------------- РљРЅРѕРїРєР° "Enter" --
 (defun c:k410odcl_BlockRefArray_OnOK (/)
   (CreateBlockRefArray))
-;------------------------------------------------------------- Кнопка "Enter" --
+;------------------------------------------------------------- РљРЅРѕРїРєР° "Enter" --
 
-;------------------------------------------------- Контроль вводимых значений --
+;------------------------------------------------- РљРѕРЅС‚СЂРѕР»СЊ РІРІРѕРґРёРјС‹С… Р·РЅР°С‡РµРЅРёР№ --
 (defun c:k410odcl_BlockRefArray_WidthTextBox_OnEditChanged (NewValue /)
-	(if (and	(<= (atoi NewValue) 0)
-					(/= NewValue ""))
-		(progn
-			(alert "Количество рядов или столбцов должно быть больше 0")
-			(dcl_Control_SetProperty k410odcl_BlockRefArray_WidthTextBox "Text" ArrayWidth)
-		)
-	)
+    (if (and    (<= (atoi NewValue) 0)
+                    (/= NewValue ""))
+        (progn
+            (alert "РљРѕР»РёС‡РµСЃС‚РІРѕ СЂСЏРґРѕРІ РёР»Рё СЃС‚РѕР»Р±С†РѕРІ РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ Р±РѕР»СЊС€Рµ 0")
+            (dcl_Control_SetProperty k410odcl_BlockRefArray_WidthTextBox "Text" ArrayWidth)
+        )
+    )
 )
 
 (defun c:k410odcl_BlockRefArray_WidthTextBox_OnKillFocus (/)
-	(if (= (dcl_Control_GetProperty k410odcl_BlockRefArray_WidthTextBox "Text") "")
-		(progn
-			(alert "Количество рядов или столбцов должно быть больше 0")
-			(dcl_Control_SetProperty k410odcl_BlockRefArray_WidthTextBox "Text" ArrayWidth)
-		)
-	)
+    (if (= (dcl_Control_GetProperty k410odcl_BlockRefArray_WidthTextBox "Text") "")
+        (progn
+            (alert "РљРѕР»РёС‡РµСЃС‚РІРѕ СЂСЏРґРѕРІ РёР»Рё СЃС‚РѕР»Р±С†РѕРІ РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ Р±РѕР»СЊС€Рµ 0")
+            (dcl_Control_SetProperty k410odcl_BlockRefArray_WidthTextBox "Text" ArrayWidth)
+        )
+    )
 )
 ;-------------------------------------------------------------------------------
 (defun c:k410odcl_BlockRefArray_dYTextBox_OnKillFocus (/)
-	(if (= (dcl_Control_GetProperty k410odcl_BlockRefArray_dYTextBox "Text") "")
-		(progn
-			(alert "Неверное расстояние между рядами")
-			(dcl_Control_SetProperty k410odcl_BlockRefArray_dYTextBox "Text" ArraydY)
-		)
-	)
+    (if (= (dcl_Control_GetProperty k410odcl_BlockRefArray_dYTextBox "Text") "")
+        (progn
+            (alert "РќРµРІРµСЂРЅРѕРµ СЂР°СЃСЃС‚РѕСЏРЅРёРµ РјРµР¶РґСѓ СЂСЏРґР°РјРё")
+            (dcl_Control_SetProperty k410odcl_BlockRefArray_dYTextBox "Text" ArraydY)
+        )
+    )
 )
 ;-------------------------------------------------------------------------------
 (defun c:k410odcl_BlockRefArray_dXTextBox_OnKillFocus (/)
-	(if (= (dcl_Control_GetProperty k410odcl_BlockRefArray_dXTextBox "Text") "")
-		(progn
-			(alert "Неверное расстояние между столбцами")
-			(dcl_Control_SetProperty k410odcl_BlockRefArray_dXTextBox "Text" ArraydX)
-		)
-	)
+    (if (= (dcl_Control_GetProperty k410odcl_BlockRefArray_dXTextBox "Text") "")
+        (progn
+            (alert "РќРµРІРµСЂРЅРѕРµ СЂР°СЃСЃС‚РѕСЏРЅРёРµ РјРµР¶РґСѓ СЃС‚РѕР»Р±С†Р°РјРё")
+            (dcl_Control_SetProperty k410odcl_BlockRefArray_dXTextBox "Text" ArraydX)
+        )
+    )
 )
 
-;------------------------------------------------- Контроль вводимых значений --
-;################################################### Диалог: массив вхождений ##
+;------------------------------------------------- РљРѕРЅС‚СЂРѕР»СЊ РІРІРѕРґРёРјС‹С… Р·РЅР°С‡РµРЅРёР№ --
+;################################################### Р”РёР°Р»РѕРі: РјР°СЃСЃРёРІ РІС…РѕР¶РґРµРЅРёР№ ##
 
-;######################################################### Диалог: обновление ##
-;------------------------------------------------------ Инициализация диалога --
+;######################################################### Р”РёР°Р»РѕРі: РѕР±РЅРѕРІР»РµРЅРёРµ ##
+;------------------------------------------------------ РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РґРёР°Р»РѕРіР° --
 (defun c:k410odcl_ReloadDialog_OnInitialize (/)
-;Обновление набора данных
-	(if (= ReloadFlag ReloadRecordSet)
-		(progn
-;Заголовок окна
-			(dcl_Control_SetProperty k410odcl_ReloadDialog "TitleBarText" (strcat TitleTXT "Обновить набор данных"))
-;Перемещение полосы прогресса в начало
-			(dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "Value" 0)
-;Отображение строки диалога
-			(dcl_Control_SetProperty k410odcl_ReloadDialog_Label "Caption" "Обновить набор данных?")
-		)
-	)
-;Обновление данных атрибутов
-	(if (= ReloadFlag ReloadData)
-		(progn
-;Заголовок окна
-			(dcl_Control_SetProperty k410odcl_ReloadDialog "TitleBarText" (strcat TitleTXT "Обновить данные атрибутов"))
-;Перемещение полосы прогресса в начало
-			(dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "Value" 0)
-;Отображение строки диалога
-			(dcl_Control_SetProperty k410odcl_ReloadDialog_Label "Caption" "Обновить данные атрибутов?")
-		)
-	)
+;РћР±РЅРѕРІР»РµРЅРёРµ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С…
+    (if (= ReloadFlag ReloadRecordSet)
+        (progn
+;Р—Р°РіРѕР»РѕРІРѕРє РѕРєРЅР°
+            (dcl_Control_SetProperty k410odcl_ReloadDialog "TitleBarText" (strcat TitleTXT "РћР±РЅРѕРІРёС‚СЊ РЅР°Р±РѕСЂ РґР°РЅРЅС‹С…"))
+;РџРµСЂРµРјРµС‰РµРЅРёРµ РїРѕР»РѕСЃС‹ РїСЂРѕРіСЂРµСЃСЃР° РІ РЅР°С‡Р°Р»Рѕ
+            (dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "Value" 0)
+;РћС‚РѕР±СЂР°Р¶РµРЅРёРµ СЃС‚СЂРѕРєРё РґРёР°Р»РѕРіР°
+            (dcl_Control_SetProperty k410odcl_ReloadDialog_Label "Caption" "РћР±РЅРѕРІРёС‚СЊ РЅР°Р±РѕСЂ РґР°РЅРЅС‹С…?")
+        )
+    )
+;РћР±РЅРѕРІР»РµРЅРёРµ РґР°РЅРЅС‹С… Р°С‚СЂРёР±СѓС‚РѕРІ
+    (if (= ReloadFlag ReloadData)
+        (progn
+;Р—Р°РіРѕР»РѕРІРѕРє РѕРєРЅР°
+            (dcl_Control_SetProperty k410odcl_ReloadDialog "TitleBarText" (strcat TitleTXT "РћР±РЅРѕРІРёС‚СЊ РґР°РЅРЅС‹Рµ Р°С‚СЂРёР±СѓС‚РѕРІ"))
+;РџРµСЂРµРјРµС‰РµРЅРёРµ РїРѕР»РѕСЃС‹ РїСЂРѕРіСЂРµСЃСЃР° РІ РЅР°С‡Р°Р»Рѕ
+            (dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "Value" 0)
+;РћС‚РѕР±СЂР°Р¶РµРЅРёРµ СЃС‚СЂРѕРєРё РґРёР°Р»РѕРіР°
+            (dcl_Control_SetProperty k410odcl_ReloadDialog_Label "Caption" "РћР±РЅРѕРІРёС‚СЊ РґР°РЅРЅС‹Рµ Р°С‚СЂРёР±СѓС‚РѕРІ?")
+        )
+    )
 )
 
-;------------------------------------------------------ Инициализация диалога --
+;------------------------------------------------------ РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РґРёР°Р»РѕРіР° --
 
-;---------------------------------------------------------------- Кнопка "Да" --
-(defun c:k410odcl_ReloadDialog_YesButton_OnClicked (/	_MSpace
-														_MSItemCount
-														_ReloadItem
-														_CurRef
-														_CurAffectiveName
-														_Str
-														_KeyPosition
-														_ReloadCount
-														_ErrorCount
-														_LockCount
-														_Layers)
-;Сброс/активация кнопок
-	(dcl_Control_SetProperty k410odcl_ReloadDialog_YesButton "Enabled" F)
-	(dcl_Control_SetProperty k410odcl_ReloadDialog_NoButton "Enabled" F)
-;Отображение полосы прокрутки
-	(dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "Visible" T)
-;Скрытыие метки
-	(dcl_Control_SetProperty k410odcl_ReloadDialog_Label "Visible" F)
-	(dcl_Control_Redraw k410odcl_ReloadDialog)
-;Обновление набора данных
-	(if (= ReloadFlag ReloadRecordSet)
-		(progn
-;Длина полосы прогресса (по количеству этапов)
-			(dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "MaxValue" 2)
-;Удаление из списка Views текущего набора данных	
-			(setq Views (vl-remove (assoc (strcat TagUDLFile ";" TagTableName ";" TagKeyFieldName) Views) Views))
-;Перемещение полосы прогресса
-			(dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "Value" 1)
-;Загрузка набора данных
-			(GetRecordSet)
-;Перемещение полосы прогресса
-			(dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "Value" 2)
-		)
-	)
-;Обновление данных атрибутов
-	(if (= ReloadFlag ReloadData)
-		(progn
-;Имя обекта
-			(setq 	_BlockRefObjectName "AcDbBlockReference"
-;Сохранение текущего вхождения
-					_CurRef CurBlockRef
-;Имя описания текущего вхождения
-					_CurAffectiveName (vla-get-EffectiveName CurBlockRef)
-;Пространство модели
-					_MSpace (vla-get-ModelSpace ActiveDoc)
-;Загрузка количества элементов в пространстве модели			
-					_MSItemCount (vla-get-count _MSpace)
-;Сброс строки записи
-					_Str ""
-;Количество обработанных вхождений
-					_ReloadCount 0
-;Количество ошибок при обновлении
-					_ErrorCount 0
-;Количество вхождений на блокированных слоях
-					_LockCount 0
-;Слои документа
-					_Layers (vla-get-Layers ActiveDoc)
-;Установка флага обновления данных
-					ReloadDataFlag T)
-	
-;Установка правой границы полосы прокрутки
-			(dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "MaxValue" _MSItemCount)
-;Перемещение полосы в начало
-			(dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "Value" ItemIndex)
-;Обновление элементов
-			(while (and ReloadDataFlag (/= ItemIndex _MSItemCount))
-;Загрузка ссылки на очередной элемент из пространства модели или простраства листа
-				(setq _ReloadItem (vla-item _MSpace ItemIndex))
-;Обновление, если элемент -- вхождение блока выбранного описания
-				(if (and 	(= (vla-get-ObjectName _ReloadItem) _BlockRefObjectName)
-							(= (vla-get-EffectiveName _ReloadItem) _CurAffectiveName))
-;Проверка слоя на блокировку
-					(if (= (vla-get-Lock (vla-Item _Layers (vla-get-Layer _ReloadItem))) :vlax-true)	;then
-						(setq _LockCount (1+ _LockCount))	;then
-						(progn	;else
-;Запись текущего элемента пространства модели
-							(setq 	CurBlockRef _ReloadItem
-;Обнуление строки записи источника базы данных
-									_Str "")
-;Инициализация вхождения блока
-							(InitBlock)
-;Обработка значения ключевого поля
-							(if (= TagKeyFieldValue "")
-								(progn	;then
-;Заполнение атрибутов
-									(if (= (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_FillErrorCheckBox "Value") 1)
-										(progn
-											(repeat (length CurColumnList) 
-												(setq 	_Str 	(strcat _Str 
-																	(dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_FillErrorTextBox "Text")
-																	"\t")))
-;Очистка таблицы от записанных значений
-											(dcl_Grid_Clear k410odcl_ChoiceRecordDialog_Grid)
-;Запись в таблицу сформированной строки
-											(dcl_Grid_AddString k410odcl_ChoiceRecordDialog_Grid _Str)
-;Запись значений в атрибуты
-											(WriteToAttrs)
-										)
-									)
-;Учет ошибки
-									(setq _ErrorCount (1+ _ErrorCount))
-								)
-								(progn	;else
-;Вычисление позиции ключевого поля в списке значений ключевого поля
-									(setq _KeyPosition (vl-position TagKeyFieldValue CurKeyValueList))
-									(if (null _KeyPosition)
-										(progn	;then
-;Заполнение атрибутов
-											(if (= (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_FillErrorCheckBox "Value") 1)
-												(progn
-													(repeat (length CurColumnList) 
-														(setq _Str (strcat 
-																	_Str 
-																	(dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_FillErrorTextBox "Text")
-																	"\t")))
-;Очистка таблицы от записанных значений
-													(dcl_Grid_Clear k410odcl_ChoiceRecordDialog_Grid)
-;Запись в таблицу сформированной строки
-													(dcl_Grid_AddString k410odcl_ChoiceRecordDialog_Grid _Str)
-;Выполнение события от кнопки "Ok"
-													(c:k410odcl_ChoiceRecordDialog_OkButton_OnClicked)
-												)
-											)
-;Учет ошибки
-											(setq _ErrorCount (1+ _ErrorCount))
-										)
-										(progn	;else
-;Перемещение курсора на вычисленную позицию
-											(vlax-invoke-method CurRecordSet "Move" _KeyPosition 1)
-;Загрузка строки
-											(setq 	_Str (vlax-invoke-method CurRecordSet "GetString" 2 1 "\t" "\t" nil))
-;Замена в строке повторяющихся последовател	"\t\t" на "\t \t"
-											(repeat (length CurColumnList) (setq _Str (vl-string-subst "\t \t" "\t\t" _Str)))
-;Очистка таблицы от записанных значений
-											(dcl_Grid_Clear k410odcl_ChoiceRecordDialog_Grid)
-;Запись в таблицу загруженной строки
-											(dcl_Grid_AddString k410odcl_ChoiceRecordDialog_Grid _Str)
-;Выполнение события от кнопки "Ok"
-											(c:k410odcl_ChoiceRecordDialog_OkButton_OnClicked)
-										)
-									)
-								)
-							)
-							(setq _ReloadCount (1+ _ReloadCount))
-						)
-					)
-				)
-;Переход на следующий элемент
-				(setq ItemIndex (1+ ItemIndex))
-;Увеличинение значения полосы прокрутки
-				(dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "Value" ItemIndex)
-			)
-;Сброс флага обновления данных
-			(setq 	ReloadDataFlag F
-;Восстанвление ссылки на исходное вхождение
-					CurBlockRef _CurRef)
-;Инициализация вхождения блока
-			(InitBlock)
-;Очистка таблицы от записанных значений
-			(dcl_Grid_Clear k410odcl_ChoiceRecordDialog_Grid)
-;Обработка значения ключевого поля
-			(if (= TagKeyFieldValue "")
+;---------------------------------------------------------------- РљРЅРѕРїРєР° "Р”Р°" --
+(defun c:k410odcl_ReloadDialog_YesButton_OnClicked (/    _MSpace
+                                                        _MSItemCount
+                                                        _ReloadItem
+                                                        _CurRef
+                                                        _CurAffectiveName
+                                                        _Str
+                                                        _KeyPosition
+                                                        _ReloadCount
+                                                        _ErrorCount
+                                                        _LockCount
+                                                        _Layers)
+;РЎР±СЂРѕСЃ/Р°РєС‚РёРІР°С†РёСЏ РєРЅРѕРїРѕРє
+    (dcl_Control_SetProperty k410odcl_ReloadDialog_YesButton "Enabled" F)
+    (dcl_Control_SetProperty k410odcl_ReloadDialog_NoButton "Enabled" F)
+;РћС‚РѕР±СЂР°Р¶РµРЅРёРµ РїРѕР»РѕСЃС‹ РїСЂРѕРєСЂСѓС‚РєРё
+    (dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "Visible" T)
+;РЎРєСЂС‹С‚С‹РёРµ РјРµС‚РєРё
+    (dcl_Control_SetProperty k410odcl_ReloadDialog_Label "Visible" F)
+    (dcl_Control_Redraw k410odcl_ReloadDialog)
+;РћР±РЅРѕРІР»РµРЅРёРµ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С…
+    (if (= ReloadFlag ReloadRecordSet)
+        (progn
+;Р”Р»РёРЅР° РїРѕР»РѕСЃС‹ РїСЂРѕРіСЂРµСЃСЃР° (РїРѕ РєРѕР»РёС‡РµСЃС‚РІСѓ СЌС‚Р°РїРѕРІ)
+            (dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "MaxValue" 2)
+;РЈРґР°Р»РµРЅРёРµ РёР· СЃРїРёСЃРєР° Views С‚РµРєСѓС‰РµРіРѕ РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С…    
+            (setq Views (vl-remove (assoc (strcat TagUDLFile ";" TagTableName ";" TagKeyFieldName) Views) Views))
+;РџРµСЂРµРјРµС‰РµРЅРёРµ РїРѕР»РѕСЃС‹ РїСЂРѕРіСЂРµСЃСЃР°
+            (dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "Value" 1)
+;Р—Р°РіСЂСѓР·РєР° РЅР°Р±РѕСЂР° РґР°РЅРЅС‹С…
+            (GetRecordSet)
+;РџРµСЂРµРјРµС‰РµРЅРёРµ РїРѕР»РѕСЃС‹ РїСЂРѕРіСЂРµСЃСЃР°
+            (dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "Value" 2)
+        )
+    )
+;РћР±РЅРѕРІР»РµРЅРёРµ РґР°РЅРЅС‹С… Р°С‚СЂРёР±СѓС‚РѕРІ
+    (if (= ReloadFlag ReloadData)
+        (progn
+;РРјСЏ РѕР±РµРєС‚Р°
+            (setq     _BlockRefObjectName "AcDbBlockReference"
+;РЎРѕС…СЂР°РЅРµРЅРёРµ С‚РµРєСѓС‰РµРіРѕ РІС…РѕР¶РґРµРЅРёСЏ
+                    _CurRef CurBlockRef
+;РРјСЏ РѕРїРёСЃР°РЅРёСЏ С‚РµРєСѓС‰РµРіРѕ РІС…РѕР¶РґРµРЅРёСЏ
+                    _CurAffectiveName (vla-get-EffectiveName CurBlockRef)
+;РџСЂРѕСЃС‚СЂР°РЅСЃС‚РІРѕ РјРѕРґРµР»Рё
+                    _MSpace (vla-get-ModelSpace ActiveDoc)
+;Р—Р°РіСЂСѓР·РєР° РєРѕР»РёС‡РµСЃС‚РІР° СЌР»РµРјРµРЅС‚РѕРІ РІ РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІРµ РјРѕРґРµР»Рё            
+                    _MSItemCount (vla-get-count _MSpace)
+;РЎР±СЂРѕСЃ СЃС‚СЂРѕРєРё Р·Р°РїРёСЃРё
+                    _Str ""
+;РљРѕР»РёС‡РµСЃС‚РІРѕ РѕР±СЂР°Р±РѕС‚Р°РЅРЅС‹С… РІС…РѕР¶РґРµРЅРёР№
+                    _ReloadCount 0
+;РљРѕР»РёС‡РµСЃС‚РІРѕ РѕС€РёР±РѕРє РїСЂРё РѕР±РЅРѕРІР»РµРЅРёРё
+                    _ErrorCount 0
+;РљРѕР»РёС‡РµСЃС‚РІРѕ РІС…РѕР¶РґРµРЅРёР№ РЅР° Р±Р»РѕРєРёСЂРѕРІР°РЅРЅС‹С… СЃР»РѕСЏС…
+                    _LockCount 0
+;РЎР»РѕРё РґРѕРєСѓРјРµРЅС‚Р°
+                    _Layers (vla-get-Layers ActiveDoc)
+;РЈСЃС‚Р°РЅРѕРІРєР° С„Р»Р°РіР° РѕР±РЅРѕРІР»РµРЅРёСЏ РґР°РЅРЅС‹С…
+                    ReloadDataFlag T)
+    
+;РЈСЃС‚Р°РЅРѕРІРєР° РїСЂР°РІРѕР№ РіСЂР°РЅРёС†С‹ РїРѕР»РѕСЃС‹ РїСЂРѕРєСЂСѓС‚РєРё
+            (dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "MaxValue" _MSItemCount)
+;РџРµСЂРµРјРµС‰РµРЅРёРµ РїРѕР»РѕСЃС‹ РІ РЅР°С‡Р°Р»Рѕ
+            (dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "Value" ItemIndex)
+;РћР±РЅРѕРІР»РµРЅРёРµ СЌР»РµРјРµРЅС‚РѕРІ
+            (while (and ReloadDataFlag (/= ItemIndex _MSItemCount))
+;Р—Р°РіСЂСѓР·РєР° СЃСЃС‹Р»РєРё РЅР° РѕС‡РµСЂРµРґРЅРѕР№ СЌР»РµРјРµРЅС‚ РёР· РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІР° РјРѕРґРµР»Рё РёР»Рё РїСЂРѕСЃС‚СЂР°СЃС‚РІР° Р»РёСЃС‚Р°
+                (setq _ReloadItem (vla-item _MSpace ItemIndex))
+;РћР±РЅРѕРІР»РµРЅРёРµ, РµСЃР»Рё СЌР»РµРјРµРЅС‚ -- РІС…РѕР¶РґРµРЅРёРµ Р±Р»РѕРєР° РІС‹Р±СЂР°РЅРЅРѕРіРѕ РѕРїРёСЃР°РЅРёСЏ
+                (if (and     (= (vla-get-ObjectName _ReloadItem) _BlockRefObjectName)
+                            (= (vla-get-EffectiveName _ReloadItem) _CurAffectiveName))
+;РџСЂРѕРІРµСЂРєР° СЃР»РѕСЏ РЅР° Р±Р»РѕРєРёСЂРѕРІРєСѓ
+                    (if (= (vla-get-Lock (vla-Item _Layers (vla-get-Layer _ReloadItem))) :vlax-true)    ;then
+                        (setq _LockCount (1+ _LockCount))    ;then
+                        (progn    ;else
+;Р—Р°РїРёСЃСЊ С‚РµРєСѓС‰РµРіРѕ СЌР»РµРјРµРЅС‚Р° РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІР° РјРѕРґРµР»Рё
+                            (setq     CurBlockRef _ReloadItem
+;РћР±РЅСѓР»РµРЅРёРµ СЃС‚СЂРѕРєРё Р·Р°РїРёСЃРё РёСЃС‚РѕС‡РЅРёРєР° Р±Р°Р·С‹ РґР°РЅРЅС‹С…
+                                    _Str "")
+;РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РІС…РѕР¶РґРµРЅРёСЏ Р±Р»РѕРєР°
+                            (InitBlock)
+;РћР±СЂР°Р±РѕС‚РєР° Р·РЅР°С‡РµРЅРёСЏ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ
+                            (if (= TagKeyFieldValue "")
+                                (progn    ;then
+;Р—Р°РїРѕР»РЅРµРЅРёРµ Р°С‚СЂРёР±СѓС‚РѕРІ
+                                    (if (= (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_FillErrorCheckBox "Value") 1)
+                                        (progn
+                                            (repeat (length CurColumnList) 
+                                                (setq     _Str     (strcat _Str 
+                                                                    (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_FillErrorTextBox "Text")
+                                                                    "\t")))
+;РћС‡РёСЃС‚РєР° С‚Р°Р±Р»РёС†С‹ РѕС‚ Р·Р°РїРёСЃР°РЅРЅС‹С… Р·РЅР°С‡РµРЅРёР№
+                                            (dcl_Grid_Clear k410odcl_ChoiceRecordDialog_Grid)
+;Р—Р°РїРёСЃСЊ РІ С‚Р°Р±Р»РёС†Сѓ СЃС„РѕСЂРјРёСЂРѕРІР°РЅРЅРѕР№ СЃС‚СЂРѕРєРё
+                                            (dcl_Grid_AddString k410odcl_ChoiceRecordDialog_Grid _Str)
+;Р—Р°РїРёСЃСЊ Р·РЅР°С‡РµРЅРёР№ РІ Р°С‚СЂРёР±СѓС‚С‹
+                                            (WriteToAttrs)
+                                        )
+                                    )
+;РЈС‡РµС‚ РѕС€РёР±РєРё
+                                    (setq _ErrorCount (1+ _ErrorCount))
+                                )
+                                (progn    ;else
+;Р’С‹С‡РёСЃР»РµРЅРёРµ РїРѕР·РёС†РёРё РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ РІ СЃРїРёСЃРєРµ Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ
+                                    (setq _KeyPosition (vl-position TagKeyFieldValue CurKeyValueList))
+                                    (if (null _KeyPosition)
+                                        (progn    ;then
+;Р—Р°РїРѕР»РЅРµРЅРёРµ Р°С‚СЂРёР±СѓС‚РѕРІ
+                                            (if (= (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_FillErrorCheckBox "Value") 1)
+                                                (progn
+                                                    (repeat (length CurColumnList) 
+                                                        (setq _Str (strcat 
+                                                                    _Str 
+                                                                    (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_FillErrorTextBox "Text")
+                                                                    "\t")))
+;РћС‡РёСЃС‚РєР° С‚Р°Р±Р»РёС†С‹ РѕС‚ Р·Р°РїРёСЃР°РЅРЅС‹С… Р·РЅР°С‡РµРЅРёР№
+                                                    (dcl_Grid_Clear k410odcl_ChoiceRecordDialog_Grid)
+;Р—Р°РїРёСЃСЊ РІ С‚Р°Р±Р»РёС†Сѓ СЃС„РѕСЂРјРёСЂРѕРІР°РЅРЅРѕР№ СЃС‚СЂРѕРєРё
+                                                    (dcl_Grid_AddString k410odcl_ChoiceRecordDialog_Grid _Str)
+;Р’С‹РїРѕР»РЅРµРЅРёРµ СЃРѕР±С‹С‚РёСЏ РѕС‚ РєРЅРѕРїРєРё "Ok"
+                                                    (c:k410odcl_ChoiceRecordDialog_OkButton_OnClicked)
+                                                )
+                                            )
+;РЈС‡РµС‚ РѕС€РёР±РєРё
+                                            (setq _ErrorCount (1+ _ErrorCount))
+                                        )
+                                        (progn    ;else
+;РџРµСЂРµРјРµС‰РµРЅРёРµ РєСѓСЂСЃРѕСЂР° РЅР° РІС‹С‡РёСЃР»РµРЅРЅСѓСЋ РїРѕР·РёС†РёСЋ
+                                            (vlax-invoke-method CurRecordSet "Move" _KeyPosition 1)
+;Р—Р°РіСЂСѓР·РєР° СЃС‚СЂРѕРєРё
+                                            (setq     _Str (vlax-invoke-method CurRecordSet "GetString" 2 1 "\t" "\t" nil))
+;Р—Р°РјРµРЅР° РІ СЃС‚СЂРѕРєРµ РїРѕРІС‚РѕСЂСЏСЋС‰РёС…СЃСЏ РїРѕСЃР»РµРґРѕРІР°С‚РµР»    "\t\t" РЅР° "\t \t"
+                                            (repeat (length CurColumnList) (setq _Str (vl-string-subst "\t \t" "\t\t" _Str)))
+;РћС‡РёСЃС‚РєР° С‚Р°Р±Р»РёС†С‹ РѕС‚ Р·Р°РїРёСЃР°РЅРЅС‹С… Р·РЅР°С‡РµРЅРёР№
+                                            (dcl_Grid_Clear k410odcl_ChoiceRecordDialog_Grid)
+;Р—Р°РїРёСЃСЊ РІ С‚Р°Р±Р»РёС†Сѓ Р·Р°РіСЂСѓР¶РµРЅРЅРѕР№ СЃС‚СЂРѕРєРё
+                                            (dcl_Grid_AddString k410odcl_ChoiceRecordDialog_Grid _Str)
+;Р’С‹РїРѕР»РЅРµРЅРёРµ СЃРѕР±С‹С‚РёСЏ РѕС‚ РєРЅРѕРїРєРё "Ok"
+                                            (c:k410odcl_ChoiceRecordDialog_OkButton_OnClicked)
+                                        )
+                                    )
+                                )
+                            )
+                            (setq _ReloadCount (1+ _ReloadCount))
+                        )
+                    )
+                )
+;РџРµСЂРµС…РѕРґ РЅР° СЃР»РµРґСѓСЋС‰РёР№ СЌР»РµРјРµРЅС‚
+                (setq ItemIndex (1+ ItemIndex))
+;РЈРІРµР»РёС‡РёРЅРµРЅРёРµ Р·РЅР°С‡РµРЅРёСЏ РїРѕР»РѕСЃС‹ РїСЂРѕРєСЂСѓС‚РєРё
+                (dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "Value" ItemIndex)
+            )
+;РЎР±СЂРѕСЃ С„Р»Р°РіР° РѕР±РЅРѕРІР»РµРЅРёСЏ РґР°РЅРЅС‹С…
+            (setq     ReloadDataFlag F
+;Р’РѕСЃСЃС‚Р°РЅРІР»РµРЅРёРµ СЃСЃС‹Р»РєРё РЅР° РёСЃС…РѕРґРЅРѕРµ РІС…РѕР¶РґРµРЅРёРµ
+                    CurBlockRef _CurRef)
+;РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РІС…РѕР¶РґРµРЅРёСЏ Р±Р»РѕРєР°
+            (InitBlock)
+;РћС‡РёСЃС‚РєР° С‚Р°Р±Р»РёС†С‹ РѕС‚ Р·Р°РїРёСЃР°РЅРЅС‹С… Р·РЅР°С‡РµРЅРёР№
+            (dcl_Grid_Clear k410odcl_ChoiceRecordDialog_Grid)
+;РћР±СЂР°Р±РѕС‚РєР° Р·РЅР°С‡РµРЅРёСЏ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ
+            (if (= TagKeyFieldValue "")
 ;then
-				(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_KeyFieldTextBox "Text" KeyFieldValueTXT)
+                (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_KeyFieldTextBox "Text" KeyFieldValueTXT)
 ;else
-				(progn
-					(dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_KeyFieldTextBox "Text" TagKeyFieldValue)
-;Вычисление позиции ключевого поля в списке значений ключевого поля
-					(setq _KeyPosition (vl-position TagKeyFieldValue CurKeyValueList))
-					(if (null _KeyPosition)
+                (progn
+                    (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_KeyFieldTextBox "Text" TagKeyFieldValue)
+;Р’С‹С‡РёСЃР»РµРЅРёРµ РїРѕР·РёС†РёРё РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ РІ СЃРїРёСЃРєРµ Р·РЅР°С‡РµРЅРёР№ РєР»СЋС‡РµРІРѕРіРѕ РїРѕР»СЏ
+                    (setq _KeyPosition (vl-position TagKeyFieldValue CurKeyValueList))
+                    (if (null _KeyPosition)
 ;then
-;Ошибка
-						(princ)
+;РћС€РёР±РєР°
+                        (princ)
 ;else
-						(progn
-;Перемещение курсора на вычисленную позицию
-							(vlax-invoke-method CurRecordSet "Move" _KeyPosition 1)
-;Загрузка строки
-							(setq 	_Str (vlax-invoke-method CurRecordSet "GetString" 2 1 "\t" "\t" nil))
-;Замена в строке повторяющихся последовател	"\t\t" на "\t \t"
-							(repeat (length CurColumnList) (setq _Str (vl-string-subst "\t \t" "\t\t" _Str)))
-;Очистка таблицы от записанных значений
-							(dcl_Grid_Clear k410odcl_ChoiceRecordDialog_Grid)
-;Запись в таблицу загруженной строки
-							(dcl_Grid_AddString k410odcl_ChoiceRecordDialog_Grid _Str)
-						)
-					)
-				)
-			)
-;Результат работы
-			(alert 	(strcat "Объектов:		" (itoa ItemIndex) "\n"
-							"Вхождений:		" (itoa (+ _ReloadCount _LockCount)) "\n"
-							"Ошибок:			" (itoa _ErrorCount) "\n"
-							"На блокированных слоях:	" (itoa _LockCount)))
-;Сброс указателя элементов, если просмотрены все элементы документа
-			(if (= ItemIndex _MSItemCount)
-				(setq ItemIndex 0))
-		)
-	)
-;Сброс/активация кнопок
-	(dcl_Control_SetProperty k410odcl_ReloadDialog_YesButton "Enabled" T)
-	(dcl_Control_SetProperty k410odcl_ReloadDialog_NoButton "Enabled" T)
-;Скрытыие полосы прокрутки
-	(dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "Visible" F)
-;Отображение метки
-	(dcl_Control_SetProperty k410odcl_ReloadDialog_Label "Visible" T)
-;Закрыть диалог
-	(dcl_Form_Close k410odcl_ReloadDialog)
+                        (progn
+;РџРµСЂРµРјРµС‰РµРЅРёРµ РєСѓСЂСЃРѕСЂР° РЅР° РІС‹С‡РёСЃР»РµРЅРЅСѓСЋ РїРѕР·РёС†РёСЋ
+                            (vlax-invoke-method CurRecordSet "Move" _KeyPosition 1)
+;Р—Р°РіСЂСѓР·РєР° СЃС‚СЂРѕРєРё
+                            (setq     _Str (vlax-invoke-method CurRecordSet "GetString" 2 1 "\t" "\t" nil))
+;Р—Р°РјРµРЅР° РІ СЃС‚СЂРѕРєРµ РїРѕРІС‚РѕСЂСЏСЋС‰РёС…СЃСЏ РїРѕСЃР»РµРґРѕРІР°С‚РµР»    "\t\t" РЅР° "\t \t"
+                            (repeat (length CurColumnList) (setq _Str (vl-string-subst "\t \t" "\t\t" _Str)))
+;РћС‡РёСЃС‚РєР° С‚Р°Р±Р»РёС†С‹ РѕС‚ Р·Р°РїРёСЃР°РЅРЅС‹С… Р·РЅР°С‡РµРЅРёР№
+                            (dcl_Grid_Clear k410odcl_ChoiceRecordDialog_Grid)
+;Р—Р°РїРёСЃСЊ РІ С‚Р°Р±Р»РёС†Сѓ Р·Р°РіСЂСѓР¶РµРЅРЅРѕР№ СЃС‚СЂРѕРєРё
+                            (dcl_Grid_AddString k410odcl_ChoiceRecordDialog_Grid _Str)
+                        )
+                    )
+                )
+            )
+;Р РµР·СѓР»СЊС‚Р°С‚ СЂР°Р±РѕС‚С‹
+            (alert     (strcat "РћР±СЉРµРєС‚РѕРІ:        " (itoa ItemIndex) "\n"
+                            "Р’С…РѕР¶РґРµРЅРёР№:        " (itoa (+ _ReloadCount _LockCount)) "\n"
+                            "РћС€РёР±РѕРє:            " (itoa _ErrorCount) "\n"
+                            "РќР° Р±Р»РѕРєРёСЂРѕРІР°РЅРЅС‹С… СЃР»РѕСЏС…:    " (itoa _LockCount)))
+;РЎР±СЂРѕСЃ СѓРєР°Р·Р°С‚РµР»СЏ СЌР»РµРјРµРЅС‚РѕРІ, РµСЃР»Рё РїСЂРѕСЃРјРѕС‚СЂРµРЅС‹ РІСЃРµ СЌР»РµРјРµРЅС‚С‹ РґРѕРєСѓРјРµРЅС‚Р°
+            (if (= ItemIndex _MSItemCount)
+                (setq ItemIndex 0))
+        )
+    )
+;РЎР±СЂРѕСЃ/Р°РєС‚РёРІР°С†РёСЏ РєРЅРѕРїРѕРє
+    (dcl_Control_SetProperty k410odcl_ReloadDialog_YesButton "Enabled" T)
+    (dcl_Control_SetProperty k410odcl_ReloadDialog_NoButton "Enabled" T)
+;РЎРєСЂС‹С‚С‹РёРµ РїРѕР»РѕСЃС‹ РїСЂРѕРєСЂСѓС‚РєРё
+    (dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "Visible" F)
+;РћС‚РѕР±СЂР°Р¶РµРЅРёРµ РјРµС‚РєРё
+    (dcl_Control_SetProperty k410odcl_ReloadDialog_Label "Visible" T)
+;Р—Р°РєСЂС‹С‚СЊ РґРёР°Р»РѕРі
+    (dcl_Form_Close k410odcl_ReloadDialog)
 )
-;---------------------------------------------------------------- Кнопка "Да" --
+;---------------------------------------------------------------- РљРЅРѕРїРєР° "Р”Р°" --
 
-;--------------------------------------------------------------- Кнопка "Нет" --
+;--------------------------------------------------------------- РљРЅРѕРїРєР° "РќРµС‚" --
 (defun c:k410odcl_ReloadDialog_NoButton_OnClicked (/)
-;Закрыть диалог
-	(dcl_Form_Close k410odcl_ReloadDialog)
+;Р—Р°РєСЂС‹С‚СЊ РґРёР°Р»РѕРі
+    (dcl_Form_Close k410odcl_ReloadDialog)
 )
-;--------------------------------------------------------------- Кнопка "Нет" --
-;######################################################### Диалог: обновление ##
+;--------------------------------------------------------------- РљРЅРѕРїРєР° "РќРµС‚" --
+;######################################################### Р”РёР°Р»РѕРі: РѕР±РЅРѕРІР»РµРЅРёРµ ##
 
 (princ)
 ;http://www.askit.ru/custom/progr_admin/m13/13_01_ado_basics.htm
