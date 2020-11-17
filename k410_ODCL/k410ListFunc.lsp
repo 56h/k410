@@ -2,189 +2,189 @@
 
 ;----------------- Функция добавдения элемента в список по указанному индексу --
 ;Вход:
-; - List 	- список, в который добавляется элемент;
-; - Num 	- смещение элемента в списке, на место которого необходимо вставить 
-;			новый элемент;
-;			если смещение меньше нуля - элемент вставляется на первое место 
-;										списка;
-;			если смещение больше длины списка - элемент вставляется в конец
-;												списка.
-; - Member	- вставляемый элемент;
+; - List    - список, в который добавляется элемент;
+; - Num     - смещение элемента в списке, на место которого необходимо вставить 
+;           новый элемент;
+;           если смещение меньше нуля - элемент вставляется на первое место 
+;                                       списка;
+;           если смещение больше длины списка - элемент вставляется в конец
+;                                               списка.
+; - Member  - вставляемый элемент;
 ;Выход:
 ; - результирующий список со вставленным элементом
 
 (defun nth_Add (_List
-				_Num
-				_Member /	_Result
-							_Head)
-;Сброс переменных	
-	(setq _Result _List)
-	(if (null _List)
-;then	
-		(setq _Result (list _Member))
+                _Num
+                _Member / _Result
+                          _Head)
+;Сброс переменных   
+    (setq _Result _List)
+    (if (null _List)
+;then   
+        (setq _Result (list _Member))
 ;else
 ;Проверка концевых вариантов
-		(if (<= _Num 0) 
-;then					
-			(setq _Result (cons _Member _List))
+        (if (<= _Num 0) 
+;then                   
+            (setq _Result (cons _Member _List))
 ;else
-			(if (>= _Num (length _List))
-;then			
-				(setq _Result (append _List (list _Member)))
+            (if (>= _Num (length _List))
+;then           
+                (setq _Result (append _List (list _Member)))
 ;else
-				(progn
-					(repeat _Num
-						(setq 	_Head (append _Head (list (car _List)))
-								_List (cdr _List))
-					)
-					(setq _Result (append (append _Head (list _Member)) _List))
-				)
-			)
-		)
-	)
-;Возвращаемое значение	
-	_Result
+                (progn
+                    (repeat _Num
+                        (setq _Head (append _Head (list (car _List)))
+                              _List (cdr _List))
+                    )
+                    (setq _Result (append (append _Head (list _Member)) _List))
+                )
+            )
+        )
+    )
+;Возвращаемое значение  
+    _Result
 )
 ;----------------- Функция добавдения элемента в список по указанному индексу --
 
 ;------------------ Функция удаления элемента в списоке по указанному индексу --
 ;Вход:
-; - List 	- список, в котором удаляется элемент;
-; - Num 	- смещение элемента в списке, который будет удален;
-;			если смещение меньше нуля или смещение больше длины списка - элемент 
-;			не удаляется
+; - List    - список, в котором удаляется элемент;
+; - Num     - смещение элемента в списке, который будет удален;
+;           если смещение меньше нуля или смещение больше длины списка - элемент 
+;           не удаляется
 ;Выход:
 ; - результирующий список без удаленного элемента
 
 (defun nth_Del (_List
-				_Num /	_Result
-						_Head)
-;Сброс переменных	
-	(setq _Result _List)
-	(if (and	(not (null _List))
-				(>= _Num 0)
-				(< _Num (length _List)))
-;then	
-		(progn
-			(repeat _Num
-				(setq 	_Head (append _Head (list (car _List)))
-						_List (cdr _List))
-			)
-			(setq _Result (append _Head (cdr _List)))
-		)	
-	)
-;Возвращаемое значение	
-	_Result
+                _Num / _Result
+                       _Head)
+;Сброс переменных   
+    (setq _Result _List)
+    (if (and (not (null _List))
+             (>= _Num 0)
+             (< _Num (length _List)))
+;then   
+        (progn
+            (repeat _Num
+                (setq _Head (append _Head (list (car _List)))
+                      _List (cdr _List))
+            )
+            (setq _Result (append _Head (cdr _List)))
+        )   
+    )
+;Возвращаемое значение  
+    _Result
 )
 ;------------------ Функция удаления элемента в списоке по указанному индексу --
 
 ;--------------------------------------- Функция перемещения эелемента списка --
 ;Вход:
-; - List 	- список, в котором перемещаются элементы;
-; - NumFrom	- смещение элемента, который будет перемещен;
-;			если смещение меньше нуля или смещение больше длины списка - элемент 
-;			не перемещается;
-; - NumTo	- смещение, на которое элемент перемещается;
-;			если смещение меньше нуля - элемент вставляется на первое место 
-;										списка;
-;			если смещение больше длины списка - элемент вставляется в конец
-;												списка.
+; - List    - список, в котором перемещаются элементы;
+; - NumFrom - смещение элемента, который будет перемещен;
+;           если смещение меньше нуля или смещение больше длины списка - элемент 
+;           не перемещается;
+; - NumTo   - смещение, на которое элемент перемещается;
+;           если смещение меньше нуля - элемент вставляется на первое место 
+;                                       списка;
+;           если смещение больше длины списка - элемент вставляется в конец
+;                                               списка.
 ;Выход:
 ; - результирующий список с перемещенным элементом;
 
-(defun nth_Move (	_List
-					_NumFrom
-					_NumTo /	_Member)
-;Сброс переменных	
-	(setq _Result _List)
-	(if (and	(not (null _List))
-				(>= _NumFrom 0)
-				(< _NumFrom (length _List)))
-;then	
+(defun nth_Move (_List
+                 _NumFrom
+                 _NumTo / _Member)
+;Сброс переменных   
+    (setq _Result _List)
+    (if (and (not (null _List))
+             (>= _NumFrom 0)
+             (< _NumFrom (length _List)))
+;then   
 ;Загрузка элемента
-		(setq 	_Member (nth _NumFrom _List)
+        (setq _Member (nth _NumFrom _List)
 ;Удаление элемента
-				_List (nth_Del _List _NumFrom)
-;Добавление	элемента
-				_Result (nth_Add _List _NumTo _Member))
-	)
-;Возвращаемое значение	
-	_Result
+              _List (nth_Del _List _NumFrom)
+;Добавление элемента
+              _Result (nth_Add _List _NumTo _Member))
+    )
+;Возвращаемое значение  
+    _Result
 )
 ;--------------------------------------- Функция перемещения эелемента списка --
 
 ;----------------------------------------------------- Функция OR для списков --
 ;Вход:
-;	- _L1, _L2 - списки
+;   - _L1, _L2 - списки
 ;Выход:
-;	список, состоящий из элементов _L1 и элементов _L2
+;   список, состоящий из элементов _L1 и элементов _L2
 (defun ListOR (_L1 _L2 /)
-	(if (= (and (listp _L1) (listp _L2)) T)
+    (if (= (and (listp _L1) (listp _L2)) T)
 ;Объединение списков и возвращение результата
-		(append _L1 _L2);then
-		(prompt "\nАргументами функции должны быть списки\n");else
-	)
+        (append _L1 _L2);then
+        (prompt "\nАргументами функции должны быть списки\n");else
+    )
 )
 ;----------------------------------------------------- Функция OR для списков --
 
 ;---------------------------------------------------- Функция XOR для списков --
 ;Вход:
-;	- _L1, _L2 - списки
+;   - _L1, _L2 - списки
 ;Выход:
-;	список, состоящий из элементов _L1, которых нет в _L2 и элементов _L2,
-;	которых нет в _L1
-(defun ListXOR (	_L1 _L2 /	_Item
-								_FullList
-								_Part1
-								_Part2)
-	(if (= (and (listp _L1) (listp _L2)) T)
-		(progn
+;   список, состоящий из элементов _L1, которых нет в _L2 и элементов _L2,
+;   которых нет в _L1
+(defun ListXOR (_L1 _L2 / _Item
+                          _FullList
+                          _Part1
+                          _Part2)
+    (if (= (and (listp _L1) (listp _L2)) T)
+        (progn
 ;Cписок, состоящий из всех элементов списков
-			(setq 	_FullList (append _L1 _L2)
-					_Part1 _FullList
-					_Part2 _FullList)
+            (setq _FullList (append _L1 _L2)
+                  _Part1 _FullList
+                  _Part2 _FullList)
 ;Удаление элементов первого списка
-			(foreach _Item _L1
-				(setq _Part1 (vl-remove _Item _Part1))
-			)
+            (foreach _Item _L1
+                (setq _Part1 (vl-remove _Item _Part1))
+            )
 ;Удаление элементов второго списка
-			(foreach _Item _L2
-				(setq _Part2 (vl-remove _Item _Part2))
-			)
+            (foreach _Item _L2
+                (setq _Part2 (vl-remove _Item _Part2))
+            )
 ;Объединение полученных частей и возвращение результата
-			(append _Part2 _Part1)
-		)
-		(prompt "\nАргументами функции должны быть списки\n")
-	)
+            (append _Part2 _Part1)
+        )
+        (prompt "\nАргументами функции должны быть списки\n")
+    )
 )
 ;---------------------------------------------------- Функция XOR для списков --
 
 ;---------------------------------------------------- Функция AND для списков --
 ;Вход:
-;	- _L1, _L2 - списки
+;   - _L1, _L2 - списки
 ;Выход:
-;	список, состоящий из элементов, которые есть и в_L1 и в _L2
-(defun ListAND (	_L1 _L2 /	_Item
-								_FullList
-								_Part)
-	(if (= (and (listp _L1) (listp _L2)) T)
-		(progn
+;   список, состоящий из элементов, которые есть и в_L1 и в _L2
+(defun ListAND (_L1 _L2 / _Item
+                          _FullList
+                          _Part)
+    (if (= (and (listp _L1) (listp _L2)) T)
+        (progn
 ;Cписок, состоящий из всех элементов списков
-			(setq 	_FullList (append _L1 _L2)
-					_Part _FullList)
+            (setq _FullList (append _L1 _L2)
+                  _Part _FullList)
 ;Удаление элементов второго списка 
 ;(получение списка элементов _L1, которых нет в _L2)
-			(foreach _Item _L2
-				(setq _FullList (vl-remove _Item _FullList))
-			)
+            (foreach _Item _L2
+                (setq _FullList (vl-remove _Item _FullList))
+            )
 ;Удаление элементов, которых нет во втором списке
-			(foreach _Item _FullList
-				(setq _L1 (vl-remove _Item _L1))
-			)
+            (foreach _Item _FullList
+                (setq _L1 (vl-remove _Item _L1))
+            )
 ;Возвращение результата
-			_L1
-		)
-		(prompt "\nАргументами функции должны быть списки\n")
-	)
+            _L1
+        )
+        (prompt "\nАргументами функции должны быть списки\n")
+    )
 )
 ;---------------------------------------------------- Функция AND для списков --

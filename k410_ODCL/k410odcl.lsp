@@ -67,7 +67,7 @@
         CurRecordSet nil
 ; - флаг обновления данных:
         ReloadDataFlag F
-; - флаг создания новых атрибутов:        
+; - флаг создания новых атрибутов:
         NewAttrFlag F
 ; - индекс элемента обновления:
         ItemIndex 0
@@ -96,11 +96,11 @@
         KeyFieldValueTXT "Значение ключевого поля..."
         ErrorTitleTxt "k410 ODCL - Ошибка"
         TitleTXT "k410 ODCL - "
-        
+
         ArrayWidth "10"
         ArraydX "100"
         ArraydY "50"
-        
+
 ;Обновить источник данных
         ReloadRecordSet 1
 ;Обновить данные атрибутов
@@ -109,7 +109,7 @@
 
 ;------------------------------------------------------------ Перечень ошибок --
         Error_001_TXT "Ошибка 001: Ошибка ключевого поля"
-;                    ключевое поле, сохраненное в описании блока    отсутствует в 
+;                    ключевое поле, сохраненное в описании блока    отсутствует в
 ;                    таблице источника данных
         Error_002_TXT "Ошибка 002: Ошибка открытия UDL файла источника данных"
 ;                    UDL файла не найден по сохраненному пути
@@ -117,7 +117,7 @@
 ;                    в загруженных наборах nil вместо указателя на набор, или
 ;                    вместо списка полей набора
         Error_004_TXT "Ошибка 004: Ошибка значения ключевого поля"
-;                    внесенное в текстовое поле значение ключевого поля 
+;                    внесенное в текстовое поле значение ключевого поля
 ;                    отсутствует в списке значений ключевого поля
 ;        Error_005_TXT
 ;------------------------------------------------------------ Перечень ошибок --
@@ -127,7 +127,7 @@
 ;--------------------------------------- Команда отображения версии программы --
 (defun c:k410_Ver (/)
     k410_Ver
-)    
+)
 ;--------------------------------------- Команда отображения версии программы --
 
 ;---------------------------------------------------- Добавление пунктов меню --
@@ -149,6 +149,7 @@
           _i 0
 ;Результат работы функции
           _Result nil)
+
     (repeat _MenuItemCount
         (if (= (vla-Get-Label (vla-Item _Menu _i)) _LabelString)
             (setq _Result _i))
@@ -172,7 +173,7 @@
     (if _Item_1 (vla-Put-HelpString _Item_1 "Создание или редактирование адресов данных"))
     (if _Item_2 (vla-Put-HelpString _Item_2 "Выбор записи таблицы источника данных"))
     (if _Item_3 (vla-Put-HelpString _Item_3 "Создание массива вхождений по всем записям источника данных"))
-    
+
     (princ)
 )
 ;-------------------------------------------- Функция добавления пунктов меню --
@@ -230,7 +231,7 @@
 ; - nil - в случае путсого или ошибочного набора данных;
 ; - список - ((список полей набора данных) vla-object НаборДанных)
 
-(defun k410_DoSQL (ConnectionObject 
+(defun k410_DoSQL (ConnectionObject
                    SQLStatement / RecordSetObject
                                   ReturnValue
                                   FieldsObject
@@ -258,7 +259,7 @@
 ;; Open the recordset.  If there is an error ...
     (if (vl-catch-all-error-p
             (setq TempObject (vl-catch-all-apply 'vlax-invoke-method
-                                 (list RecordSetObject "Open" 
+                                 (list RecordSetObject "Open"
                                        SQLStatement
                                        ConnectionObject nil nil
                                        ADOConstant-adCmdText
@@ -296,7 +297,7 @@
 ;; Get the number of columns
                       FieldCount (vlax-get-property FieldsObject "Count")
                       FieldNumber -1)
-;; For all the fields ...                    
+;; For all the fields ...
                 (while (> FieldCount (setq FieldNumber (1+ FieldNumber)))
                     (setq FieldItem (vlax-get-property FieldsObject "Item" FieldNumber)
 ;; Get the names of all the columns in a list to
@@ -325,7 +326,7 @@
 ;------------------------------------------- Функция поиска элемента в списке --
 
 ;----------------------------- Функция загрузки атрибутов из описания блока c --
-;                              заданным логическим свойством 
+;                              заданным логическим свойством
 ;Вход:
 ; * _BlockRef - ссылка на вхождение блока;
 ; * _AttrProperty - строка с именем логического свойства:
@@ -344,8 +345,8 @@
 ; * nil в случае отсутствия атрибутов у блока
 (setq AttrObjectName "AcDbAttributeDefinition")
 
-(defun GetAttributes (_BlockRef 
-                      _AttrProperty 
+(defun GetAttributes (_BlockRef
+                      _AttrProperty
                       _EqFlag / _TempVar
                                 _Block
                                 _Index
@@ -428,10 +429,10 @@
 ;then
                     (setq AttrFieldsList (append AttrFieldsList (list "")))
 ;else
-                    (setq AttrFieldsList 
-                        (append AttrFieldsList 
-                            (list    
-                                (vla-get-TextString 
+                    (setq AttrFieldsList
+                        (append AttrFieldsList
+                            (list
+                                (vla-get-TextString
                                     (nth (vl-position (strcat AttrPrefix (vla-get-TagString _CurAttr)) ConstAttrList) ConstAttrRefList)
                                 )
                             )
@@ -508,7 +509,7 @@
                             (vlax-invoke-method _KeyFields "Close")
                             (vlax-release-object _KeyFields)
 ;Формирование итогового списка
-                            (setq _View (list (car _FullView) 
+                            (setq _View (list (car _FullView)
                                   _KeyValues
                                   (last _FullView)))
 ;Проверка на отсутствие nil-ов в полученных списках
@@ -522,7 +523,7 @@
 ;Набор данных
                                           CurRecordSet (last _FullView)
 ;Добавление набора данных к списку наборов
-                                            Views (append Views 
+                                            Views (append Views
                                                             (list (append (list (strcat TagUDLFile ";" TagTableName ";" TagKeyFieldName)) _View))))
 ;Проверка ключевого поля
                                     (if (null (vl-position TagKeyFieldName CurColumnList))
@@ -565,7 +566,7 @@
 ;------------------------------------------ Команды извлечения значений ключа --
 ;Выход:
 ; - nil - атрибута ключа нет или значение ключа равно nil
-; - список значений KeyValues и в строка значений KeyValuesStr (полученную 
+; - список значений KeyValues и в строка значений KeyValuesStr (полученную
 ;    строку    удобно использовать при посроении SQL-запросов к источникам данных)
 ;
 ;Если установлен флаг KeyValuesClear (= Т) перед выполнением команды списки
@@ -661,9 +662,9 @@
     (if (= (and (listp _L1) (listp _L2)) T)
         (progn
 ;Cписок, состоящий из всех элементов списков
-            (setq     _FullList (append _L1 _L2)
-                    _Part1 _FullList
-                    _Part2 _FullList)
+            (setq _FullList (append _L1 _L2)
+                  _Part1 _FullList
+                  _Part2 _FullList)
 ;Удаление элементов первого списка
             (foreach _Item _L1
                 (setq _Part1 (vl-remove _Item _Part1))
@@ -693,7 +694,7 @@
 ;Cписок, состоящий из всех элементов списков
             (setq _FullList (append _L1 _L2)
                   _Part _FullList)
-;Удаление элементов второго списка 
+;Удаление элементов второго списка
 ;(получение списка элементов _L1, которых нет в _L2)
             (foreach _Item _L2
                 (setq _FullList (vl-remove _Item _FullList))
@@ -720,7 +721,7 @@
     )
     (princ)
 ;Обновить, если созданы новые атрибуты
-    (if NewAttrFlag 
+    (if NewAttrFlag
         (progn
             (command "_.battman"))
             (setq NewAttrFlag F)
@@ -759,7 +760,7 @@
             (dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldComboBox "Enabled" T)
             (dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldComboBox "List" CurColumnList)
         )
-    ) 
+    )
 )
 ;------------------------------------------------------ Инициализация диалога --
 
@@ -793,7 +794,7 @@
                 )
             )
         )
-    )  
+    )
 )
 ;--------------------------------------------------- Кнопка "Источник данных" --
 
@@ -802,16 +803,16 @@
                                                               _Field
                                                               _Row)
 ;Загрузка имени поля
-    (setq     _Field (dcl_Control_GetProperty k410odcl_DataAddrDialog_FieldComboBox "Text")
+    (setq _Field (dcl_Control_GetProperty k410odcl_DataAddrDialog_FieldComboBox "Text")
 ;Получение номера строки
-            _Row (car (dcl_Grid_GetCurCell k410odcl_DataAddrDialog_Grid)))
+          _Row (car (dcl_Grid_GetCurCell k410odcl_DataAddrDialog_Grid)))
 ;Сохранение записи в таблице
     (if (/= _Row -1)
 ;then
-        (progn 
+        (progn
             (dcl_Grid_SetCellText k410odcl_DataAddrDialog_Grid _Row 1 _Field)
 ;Отображение кнопки "Удалить запись"
-   
+
             (dcl_Control_SetProperty k410odcl_DataAddrDialog_DelRecordButton "Enabled" T)
         )
     )
@@ -840,7 +841,7 @@
         (setq _СellList (cdr _СellList))
     )
 ;Отображение кнопки "Сохранить"
-    (dcl_Control_SetProperty k410odcl_DataAddrDialog_SaveButton "Enabled" T)  
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_SaveButton "Enabled" T)
 )
 ;---------------------------------------------------- Кнопка "Удалить запись" --
 
@@ -856,7 +857,7 @@
     (if (null _AttrIndex)
 ;then
 ;Создание атрибута UDL файла
-        (setq _AttrIndex 
+        (setq _AttrIndex
               (vla-AddAttribute
                     CurBlock
                     0.001                                                                             ;Height
@@ -883,18 +884,18 @@
     (if (null _AttrIndex)
 ;then
 ;Создание атрибута имени таблицы источника данных
-        (setq _AttrIndex 
+        (setq _AttrIndex
               (vla-AddAttribute
                     CurBlock
                     0.001                                                                             ;Height
-                    (+     acAttributeModeInvisible                                                   ;Mode
-                        acAttributeModeConstant
-                        acAttributeModeLockPosition)
+                    (+ acAttributeModeInvisible                                                       ;Mode
+                       acAttributeModeConstant
+                       acAttributeModeLockPosition)
                     "k410 ODCL: служебный атрибут"                                                    ;Prompt
                     (vlax-safearray-fill (vlax-make-safearray vlax-vbDouble '(0 . 2)) '(0.0 0.0 0.0)) ;Insertion point
                     AttrTableName                                                                     ;Tag
                     TagTableName                                                                      ;Value
-                )     
+              )
                 ConstAttrList (append ConstAttrList (list AttrTableName))
                 ConstAttrRefList (append ConstAttrRefList (list _AttrIndex))
 ;Установка флага создания нового атрибута
@@ -910,17 +911,17 @@
     (if (null _AttrIndex)
 ;then
 ;Создание атрибута ключевого поля таблицы источника данных
-        (setq _AttrIndex 
+        (setq _AttrIndex
               (vla-AddAttribute
                     CurBlock
-                    0.001                                                                                ;Height
-                    (+     acAttributeModeInvisible                                                        ;Mode
-                        acAttributeModeConstant
-                        acAttributeModeLockPosition)
-                    "k410 ODCL: служебный атрибут"                                                        ;Prompt
-                    (vlax-safearray-fill (vlax-make-safearray vlax-vbDouble '(0 . 2)) '(0.0 0.0 0.0))    ;Insertion point
-                    AttrKeyFieldName                                                                    ;Tag
-                    TagKeyFieldName                                                                        ;Value
+                    0.001                                                                             ;Height
+                    (+ acAttributeModeInvisible                                                       ;Mode
+                       acAttributeModeConstant
+                       acAttributeModeLockPosition)
+                    "k410 ODCL: служебный атрибут"                                                    ;Prompt
+                    (vlax-safearray-fill (vlax-make-safearray vlax-vbDouble '(0 . 2)) '(0.0 0.0 0.0)) ;Insertion point
+                    AttrKeyFieldName                                                                  ;Tag
+                    TagKeyFieldName                                                                   ;Value
                 )
                 ConstAttrList (append ConstAttrList (list AttrKeyFieldName))
                 ConstAttrRefList (append ConstAttrRefList (list _AttrIndex))
@@ -935,51 +936,53 @@
     (if (null AttrRefKeyFieldValue)
 ;then
 ;Создание атрибута ключевого поля таблицы источника данных
-        (setq     _AttrIndex 
-                (vla-AddAttribute    CurBlock
-                                    0.001                                                                                ;Height
-                                    (+     acAttributeModeInvisible                                                        ;Mode
-                                        acAttributeModeLockPosition)
-                                    "k410 ODCL: служебный атрибут"                                                        ;Prompt
-                                    (vlax-safearray-fill (vlax-make-safearray vlax-vbDouble '(0 . 2)) '(0.0 0.0 0.0))    ;Insertion point
-                                    AttrKeyFieldValue                                                                    ;Tag
-                                    TagKeyFieldValue                                                                    ;Value
-                )            
-                AttrRefKeyFieldValue _AttrIndex
+        (setq _AttrIndex
+              (vla-AddAttribute
+                    CurBlock
+                    0.001                                                                             ;Height
+                    (+ acAttributeModeInvisible                                                       ;Mode
+                       acAttributeModeLockPosition)
+                    "k410 ODCL: служебный атрибут"                                                    ;Prompt
+                    (vlax-safearray-fill (vlax-make-safearray vlax-vbDouble '(0 . 2)) '(0.0 0.0 0.0)) ;Insertion point
+                    AttrKeyFieldValue                                                                 ;Tag
+                    TagKeyFieldValue                                                                  ;Value
+              )
+              AttrRefKeyFieldValue _AttrIndex
 ;Установка флага создания нового атрибута
-                NewAttrFlag T
+              NewAttrFlag T
         )
 ;else
 ;Запись в атрибут ключевого поля таблицы источника данных
         (vla-put-textstring AttrRefKeyFieldValue TagKeyFieldValue)
     )
 ;Инициализацтя пременных
-    (setq     _Index 0
-            _AttrList (dcl_Grid_GetColumnCells k410odcl_DataAddrDialog_Grid 0)
-            _FieldList (dcl_Grid_GetColumnCells k410odcl_DataAddrDialog_Grid 1)
+    (setq _Index 0
+          _AttrList (dcl_Grid_GetColumnCells k410odcl_DataAddrDialog_Grid 0)
+          _FieldList (dcl_Grid_GetColumnCells k410odcl_DataAddrDialog_Grid 1)
 ;Запись адресов данных
             _Index 0)
     (repeat (length _AttrList)
-        (setq     _AttrName (strcat AttrPrefix (nth _Index _AttrList))
-                _AttrIndex (vl-position _AttrName ConstAttrList))
+        (setq _AttrName (strcat AttrPrefix (nth _Index _AttrList))
+              _AttrIndex (vl-position _AttrName ConstAttrList))
         (if (null _AttrIndex)
 ;then
 ;Создание атрибута ключевого поля таблицы источника данных
-            (setq     _AttrIndex 
-                    (vla-AddAttribute    CurBlock
-                                        0.001                                                                                ;Height
-                                        (+     acAttributeModeInvisible                                                        ;Mode
-                                            acAttributeModeConstant
-                                            acAttributeModeLockPosition)
-                                        "k410 ODCL: служебный атрибут"                                                        ;Prompt
-                                        (vlax-safearray-fill (vlax-make-safearray vlax-vbDouble '(0 . 2)) '(0.0 0.0 0.0))    ;Insertion point
-                                        _AttrName                                                                            ;Tag
-                                        (nth _Index _FieldList)                                                                ;Value
-                    )
-                    ConstAttrList (append ConstAttrList (list _AttrName))
-                    ConstAttrRefList (append ConstAttrRefList (list _AttrIndex))
+            (setq _AttrIndex
+                  (vla-AddAttribute
+                        CurBlock
+                        0.001                                                                             ;Height
+                        (+ acAttributeModeInvisible                                                       ;Mode
+                           acAttributeModeConstant
+                           acAttributeModeLockPosition)
+                        "k410 ODCL: служебный атрибут"                                                    ;Prompt
+                        (vlax-safearray-fill (vlax-make-safearray vlax-vbDouble '(0 . 2)) '(0.0 0.0 0.0)) ;Insertion point
+                        _AttrName                                                                         ;Tag
+                        (nth _Index _FieldList)                                                           ;Value
+                  )
+                  ConstAttrList (append ConstAttrList (list _AttrName))
+                  ConstAttrRefList (append ConstAttrRefList (list _AttrIndex))
 ;Установка флага создания нового атрибута
-                    NewAttrFlag T
+                  NewAttrFlag T
             )
 ;else
 ;Запись в атрибут значения поля таблицы источника данных
@@ -988,7 +991,7 @@
         (setq _Index (1+ _Index))
     )
 ;Отключение кнопки "Сохранить
-    (dcl_Control_SetProperty k410odcl_DataAddrDialog_SaveButton "Enabled" F)  
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_SaveButton "Enabled" F)
 )
 ;--------------------------------------------------------- Кнопка "Сохранить" --
 
@@ -999,19 +1002,19 @@
 ;----------------------------------------------------------- Кнопка "Закрыть" --
 
 ;------------------ Закрытие диалога "Открыть файл описания источника данных" --
-(defun c:k410odcl_OpenUDLForm_OnClose (    UpperLeftX
-                                        UpperLeftY /    _ConnectionObj
-                                                        _View)
+(defun c:k410odcl_OpenUDLForm_OnClose (UpperLeftX
+                                       UpperLeftY / _ConnectionObj
+                                                    _View)
 ;Загрузка полного имени (включая путь) файла UDL источника данных
     (setq TagUDLFile (dcl_FileExplorer_GetPathName k410odcl_OpenUDLForm_FileExplorer))
 ;Проверка длины имени UDL файла источника данных
     (if (> (strlen TagUDLFile) 255)
         (progn
-            (dcl_MessageBox    "Длина полного имени файла UDL источника данных (включая путь)\n не должна превышать 255 символов."
+            (dcl_MessageBox "Длина полного имени файла UDL источника данных (включая путь)\n не должна превышать 255 символов."
                             ErrorTitleTxt
                             2 4)
             (setq TagUDLFile "")
-        )  
+        )
     )
 ;Сброс флага выбора нового источника данных
     (setq _DSChangeFlag F)
@@ -1031,8 +1034,8 @@
                     (dcl_Form_Show k410odcl_DSChoiceDialog)
 ;Закрытие соединения
                     (ADOLISP_DisconnectFromDB _ConnectionObj)
-                )  
-            )    
+                )
+            )
         )
 ;else
         (princ)
@@ -1042,12 +1045,12 @@
 
 ;---------------------- Инициализация диалога выбора таблицы и ключевого поля --
 ;Диалог открывается, если соединение было создано
-(defun c:k410odcl_DSChoiceDialog_OnInitialize (/    _TV
-                                                    _TablesAndViews)
+(defun c:k410odcl_DSChoiceDialog_OnInitialize (/ _TV
+                                                 _TablesAndViews)
 ;Загрузка перечня таблиц и запросов
 
-    (setq     _TV (ADOLISP_GetTablesAndViews _ConnectionObj)
-            _TablesAndViews (append (nth 0 _TV) (nth 1 _TV)))
+    (setq _TV (ADOLISP_GetTablesAndViews _ConnectionObj)
+          _TablesAndViews (append (nth 0 _TV) (nth 1 _TV)))
 ;Запись перечня таблиц и запросов в выпадающий список
     (dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSTableComboBox "List" _TablesAndViews)
 ;Сброс текстовых полей выпадающих списков, кнопок
@@ -1060,8 +1063,8 @@
 ;---------------------- Инициализация диалога выбора таблицы и ключевого поля --
 
 ;------------------------------------------------ Событие смены имени таблицы --
-(defun c:k410odcl_DSChoiceDialog_DSTableComboBox_OnSelChanged (    ItemIndexOrCount 
-                                                                Value / _CL)
+(defun c:k410odcl_DSChoiceDialog_DSTableComboBox_OnSelChanged (ItemIndexOrCount
+                                                               Value / _CL)
 ;Сброс текстового поля выпадающего списка
     (dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "Text" KeyFieldTXT)
 ;Получение списка полей таблицы или запроса
@@ -1073,9 +1076,9 @@
             (k410_ErrorPrinter)
 ;Сброс выпадающего списка
             (dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "Enabled" F)
-            (dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldLabel "Enabled" F)       
+            (dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldLabel "Enabled" F)
         )
-;else        
+;else
         (progn
 ;Включение выпадающего списка
             (dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "Enabled" T)
@@ -1083,7 +1086,7 @@
 ;Формирование и запись выпадающего списка
             (setq CurColumnList nil)
             (foreach _ColName _CL
-                (setq     CurColumnList (append CurColumnList (list (car _ColName))))
+                (setq CurColumnList (append CurColumnList (list (car _ColName))))
             )
             (dcl_Control_SetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "List" CurColumnList)
         )
@@ -1099,13 +1102,13 @@
 ;----------------------------------------------- Событие смены ключевого поля --
 
 ;------------- Кнопка "Ok" и закрытие диалога выбора таблицы и ключевого поля --
-(defun c:k410odcl_DSChoiceDialog_OkButton_OnClicked (/    _View
-                                                        _Col
-                                                        _Str
-                                                        _Prop)
+(defun c:k410odcl_DSChoiceDialog_OkButton_OnClicked (/ _View
+                                                       _Col
+                                                       _Str
+                                                       _Prop)
 ;Сохранение имени таблицы и ключевого поля
-    (setq     TagTableName (dcl_Control_GetProperty k410odcl_DSChoiceDialog_DSTableComboBox "Text")
-            TagKeyFieldName (dcl_Control_GetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "Text"))
+    (setq TagTableName (dcl_Control_GetProperty k410odcl_DSChoiceDialog_DSTableComboBox "Text")
+          TagKeyFieldName (dcl_Control_GetProperty k410odcl_DSChoiceDialog_DSKeyFieldComboBox "Text"))
 ;Запись перечня полей в выпадающий список
     (dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldComboBox "List" CurColumnList)
     (dcl_Control_SetProperty k410odcl_DataAddrDialog_FieldNameLabel "Enabled" T)
@@ -1113,7 +1116,7 @@
     (dcl_Control_SetProperty k410odcl_DataAddrDialog_SaveButton "Enabled" T)
     (dcl_Control_SetProperty k410odcl_DataAddrDialog_LabelUDLFilePrompt "Caption" TagUDLFile)
     (dcl_Control_SetProperty k410odcl_DataAddrDialog_LabelTableNamePrompt "Caption" TagTableName)
-    (dcl_Control_SetProperty k410odcl_DataAddrDialog_LabelKeyFieldPrompt "Caption" TagKeyFieldName)  
+    (dcl_Control_SetProperty k410odcl_DataAddrDialog_LabelKeyFieldPrompt "Caption" TagKeyFieldName)
 ;Закрытие диалога с кодом 1 ([Enter])
     (dcl_Form_Close k410odcl_DSChoiceDialog 1)
 ;Установка флага выбора нового источника данных
@@ -1141,14 +1144,14 @@
 
 
 ;--------------------------------------------------------- Заполнение таблицы --
-(defun FillChoiceRecordDialogTable (/    _Str
-                                        _KeyPosition)
+(defun FillChoiceRecordDialogTable (/ _Str
+                                      _KeyPosition)
 ;Сброс или установка кнопки "Обновить набор данных"
     (if (null CurRecordSet)
         (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_ReloadDSButton "Enabled" F)
         (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_ReloadDSButton "Enabled" T)
-    )    
-;Удаление колонок предыдущего набора (если они сохранились)    
+    )
+;Удаление колонок предыдущего набора (если они сохранились)
     (while (/= (dcl_Grid_GetColumnCount k410odcl_ChoiceRecordDialog_Grid) 0)
         (dcl_Grid_DeleteColumn k410odcl_ChoiceRecordDialog_Grid 0)
     )
@@ -1175,14 +1178,14 @@
 ;Перемещение курсора на вычисленную позицию
                     (vlax-invoke-method CurRecordSet "Move" _KeyPosition 1)
 ;Загрузка строки
-                    (setq     _Str (vlax-invoke-method CurRecordSet "GetString" 2 1 "\t" "\t" nil))
+                    (setq _Str (vlax-invoke-method CurRecordSet "GetString" 2 1 "\t" "\t" nil))
 ;Замена в строке повторяющихся последовател    "\t\t" на "\t \t"
                     (repeat (length CurColumnList) (setq _Str (vl-string-subst "\t \t" "\t\t" _Str)))
 ;Очистка таблицы от записанных значений
                     (dcl_Grid_Clear k410odcl_ChoiceRecordDialog_Grid)
 ;Запись в таблицу загруженной строки
                     (dcl_Grid_AddString k410odcl_ChoiceRecordDialog_Grid _Str)
-;Активация кнопки "Ok"            
+;Активация кнопки "Ok"
                     (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_OkButton "Enabled" T)
                 )
             )
@@ -1193,7 +1196,7 @@
 
 ;---------------------------------------- Инициализация диалога выбора записи --
 (defun c:k410odcl_ChoiceRecordDialog_OnInitialize (/)
-;Инициализация переменных    
+;Инициализация переменных
     (InitBlock)
 ;Запись значений идентификации источника данных
     (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_LabelUDLFilePrompt "Caption" TagUDLFile)
@@ -1208,7 +1211,7 @@
     (FillChoiceRecordDialogTable)
 ;Сброс счетчика обновлений
     (setq ItemIndex 0)
-;Установка фокуса на поле вводв    
+;Установка фокуса на поле вводв
     (dcl_Control_SetFocus k410odcl_ChoiceRecordDialog_KeyFieldTextBox)
 )
 ;---------------------------------------- Инициализация диалога выбора записи --
@@ -1217,8 +1220,8 @@
 (defun c:k410odcl_ChoiceRecordDialog_KeyFieldTextBox_OnEditChanged (NewValue /)
 ;Активация кнопки "Найти"
     (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_SearchButton "Enabled" T)
-;Сброс кнопки "Ok"            
-    (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_OkButton "Enabled" F) 
+;Сброс кнопки "Ok"
+    (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_OkButton "Enabled" F)
 )
 ;---------------------------------------------- Смена значения ключевого поля --
 
@@ -1229,8 +1232,8 @@
 ;----------------------------------------------------------- Кнопка "Закрыть" --
 
 ;--------------------------------------------------------------- Поиск записи --
-(defun RecordSearch (/     _KeyPosition
-                        _Str)
+(defun RecordSearch (/ _KeyPosition
+                       _Str)
 ;Вычисление позиции ключевого поля в списке значений ключевого поля
     (setq _KeyPosition (vl-position (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_KeyFieldTextBox "Text") CurKeyValueList))
     (if (null _KeyPosition)
@@ -1242,7 +1245,7 @@
 ;Перемещение курсора на вычисленную позицию
             (vlax-invoke-method CurRecordSet "Move" _KeyPosition 1)
 ;Загрузка строки
-            (setq     _Str (vlax-invoke-method CurRecordSet "GetString" 2 1 "\t" "\t" nil))
+            (setq _Str (vlax-invoke-method CurRecordSet "GetString" 2 1 "\t" "\t" nil))
 ;Замена в строке повторяющихся последовател    "\t\t" на "\t \t"
             (repeat (length CurColumnList) (setq _Str (vl-string-subst "\t \t" "\t\t" _Str)))
 ;Очистка таблицы от записанных значений
@@ -1251,7 +1254,7 @@
             (dcl_Grid_AddString k410odcl_ChoiceRecordDialog_Grid _Str)
 ;Сброс кнопки "Найти"
             (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_SearchButton "Enabled" F)
-;Активация кнопки "Ok"            
+;Активация кнопки "Ok"
             (dcl_Control_SetProperty k410odcl_ChoiceRecordDialog_OkButton "Enabled" T)
         )
     )
@@ -1265,9 +1268,9 @@
 ;------------------------------------------------------------- Кнопка "Найти" --
 
 ;------------------------------------------------- Запись значений в атрибуты --
-(defun WriteToAttrs (/    _AttrIndex
-                        _ColPos
-                        _Layers)
+(defun WriteToAttrs (/ _AttrIndex
+                       _ColPos
+                       _Layers)
 ;Слои документа
     (setq _Layers (vla-get-Layers ActiveDoc))
 ;Запись значений в атрибуты из таблицы
@@ -1285,7 +1288,7 @@
 ;Запись значения в атрибут
                     (progn    ;else
                         (if (not (null _ColPos))
-;then                
+;then
                             (vla-Put-TextString _AttrRef (dcl_Grid_GetCellText k410odcl_ChoiceRecordDialog_Grid 0 _ColPos))
 ;else
                             (if (= (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_CheckBox2 "Value") 1)
@@ -1359,7 +1362,7 @@
   (RecordSearch)
   (WriteToAttrs)
 )
-;------------------------------------------------------------- Кнопка "Enter" -- 
+;------------------------------------------------------------- Кнопка "Enter" --
 ;####################################################### Диалог: выбор записи ##
 
 ;################################################### Диалог: массив вхождений ##
@@ -1378,10 +1381,10 @@
 ;Заполнение полей элементов управления
     (if (= (dcl_Control_GetProperty k410odcl_BlockRefArray_WidthTextBox "Text") "")
         (dcl_Control_SetProperty k410odcl_BlockRefArray_WidthTextBox "Text" ArrayWidth))
-        
+
     (if (= (dcl_Control_GetProperty k410odcl_BlockRefArray_dYTextBox "Text") "")
         (dcl_Control_SetProperty k410odcl_BlockRefArray_dYTextBox "Text" ArraydX))
-        
+
     (if (= (dcl_Control_GetProperty k410odcl_BlockRefArray_dXTextBox "Text") "")
         (dcl_Control_SetProperty k410odcl_BlockRefArray_dXTextBox "Text" ArraydY))
 
@@ -1417,23 +1420,23 @@
 ;------------------------- Инициализация диалога построения массива вхождений --
 
 ;------------------------------------------------- Создание массива вхождений --
-(defun CreateBlockRefArray (/    _KeyValueList
-                                _MSpace
-                                _Width
-                                _dX
-                                _dY
-                                _InsPoint
-                                _BlockName
-                                _BasePoint
-                                _Index)
+(defun CreateBlockRefArray (/ _KeyValueList
+                              _MSpace
+                              _Width
+                              _dX
+                              _dY
+                              _InsPoint
+                              _BlockName
+                              _BasePoint
+                              _Index)
 ;Загрузка настроечных переменных массива
-    (setq    _MSpace (vla-get-ModelSpace ActiveDoc)
-            _Width (atoi (dcl_Control_GetProperty k410odcl_BlockRefArray_WidthTextBox "Text"))
-            _dX (atoi (dcl_Control_GetProperty k410odcl_BlockRefArray_dXTextBox "Text"))
-            _dY (atoi (dcl_Control_GetProperty k410odcl_BlockRefArray_dYTextBox "Text"))
-            _BlockName (vla-get-EffectiveName CurBlockRef)
-            ReloadDataFlag T
-            _Index 0)
+    (setq _MSpace (vla-get-ModelSpace ActiveDoc)
+          _Width (atoi (dcl_Control_GetProperty k410odcl_BlockRefArray_WidthTextBox "Text"))
+          _dX (atoi (dcl_Control_GetProperty k410odcl_BlockRefArray_dXTextBox "Text"))
+          _dY (atoi (dcl_Control_GetProperty k410odcl_BlockRefArray_dYTextBox "Text"))
+          _BlockName (vla-get-EffectiveName CurBlockRef)
+          ReloadDataFlag T
+          _Index 0)
 ;Загрузка списка значений ключей
     (if (= (dcl_Control_GetProperty k410odcl_BlockRefArray_OptionButton1 "Value") 1)
         (setq _KeyValueList CurKeyValueList);then
@@ -1442,21 +1445,21 @@
 ;Закрытие окна диалога
     (dcl_Form_Close k410odcl_BlockRefArray)
 ;Выбор базовой точки массива
-    (setq     _InsPoint (getpoint)
-            _BasePoint _InsPoint)
+    (setq _InsPoint (getpoint)
+          _BasePoint _InsPoint)
 ;Построение массива
     (foreach _KeyFieldValue _KeyValueList
 ;Добавление вхождения
-        (setq     CurBlockRef (vla-InsertBlock _MSpace (vlax-3d-point _InsPoint) _BlockName 1 1 1 0)
-                _Index (1+ _Index))
+        (setq CurBlockRef (vla-InsertBlock _MSpace (vlax-3d-point _InsPoint) _BlockName 1 1 1 0)
+              _Index (1+ _Index))
 ;Инициализация созданного вхождения
         (InitBlock)
 ;Запись значения ключевого поля во вхождение
         (vla-Put-TextString AttrRefKeyFieldValue _KeyFieldValue)
 ;Расчет точки вставки следующего вхождения
         (if (= _Index _Width)
-            (setq    _Index 0
-                    _InsPoint (list (car _BasePoint) (+ (cadr _InsPoint) _dY) 0))
+            (setq _Index 0
+                  _InsPoint (list (car _BasePoint) (+ (cadr _InsPoint) _dY) 0))
             (setq _InsPoint (list (+ (car _InsPoint) _dX) (cadr _InsPoint) 0))
         )
     )
@@ -1560,17 +1563,17 @@
 ;------------------------------------------------------ Инициализация диалога --
 
 ;---------------------------------------------------------------- Кнопка "Да" --
-(defun c:k410odcl_ReloadDialog_YesButton_OnClicked (/    _MSpace
-                                                        _MSItemCount
-                                                        _ReloadItem
-                                                        _CurRef
-                                                        _CurAffectiveName
-                                                        _Str
-                                                        _KeyPosition
-                                                        _ReloadCount
-                                                        _ErrorCount
-                                                        _LockCount
-                                                        _Layers)
+(defun c:k410odcl_ReloadDialog_YesButton_OnClicked (/ _MSpace
+                                                      _MSItemCount
+                                                      _ReloadItem
+                                                      _CurRef
+                                                      _CurAffectiveName
+                                                      _Str
+                                                      _KeyPosition
+                                                      _ReloadCount
+                                                      _ErrorCount
+                                                      _LockCount
+                                                      _Layers)
 ;Сброс/активация кнопок
     (dcl_Control_SetProperty k410odcl_ReloadDialog_YesButton "Enabled" F)
     (dcl_Control_SetProperty k410odcl_ReloadDialog_NoButton "Enabled" F)
@@ -1584,7 +1587,7 @@
         (progn
 ;Длина полосы прогресса (по количеству этапов)
             (dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "MaxValue" 2)
-;Удаление из списка Views текущего набора данных    
+;Удаление из списка Views текущего набора данных
             (setq Views (vl-remove (assoc (strcat TagUDLFile ";" TagTableName ";" TagKeyFieldName) Views) Views))
 ;Перемещение полосы прогресса
             (dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "Value" 1)
@@ -1598,28 +1601,28 @@
     (if (= ReloadFlag ReloadData)
         (progn
 ;Имя обекта
-            (setq     _BlockRefObjectName "AcDbBlockReference"
+            (setq _BlockRefObjectName "AcDbBlockReference"
 ;Сохранение текущего вхождения
-                    _CurRef CurBlockRef
+                  _CurRef CurBlockRef
 ;Имя описания текущего вхождения
-                    _CurAffectiveName (vla-get-EffectiveName CurBlockRef)
+                  _CurAffectiveName (vla-get-EffectiveName CurBlockRef)
 ;Пространство модели
-                    _MSpace (vla-get-ModelSpace ActiveDoc)
-;Загрузка количества элементов в пространстве модели            
-                    _MSItemCount (vla-get-count _MSpace)
+                  _MSpace (vla-get-ModelSpace ActiveDoc)
+;Загрузка количества элементов в пространстве модели
+                  _MSItemCount (vla-get-count _MSpace)
 ;Сброс строки записи
-                    _Str ""
+                  _Str ""
 ;Количество обработанных вхождений
-                    _ReloadCount 0
+                  _ReloadCount 0
 ;Количество ошибок при обновлении
-                    _ErrorCount 0
+                  _ErrorCount 0
 ;Количество вхождений на блокированных слоях
-                    _LockCount 0
+                  _LockCount 0
 ;Слои документа
-                    _Layers (vla-get-Layers ActiveDoc)
+                  _Layers (vla-get-Layers ActiveDoc)
 ;Установка флага обновления данных
-                    ReloadDataFlag T)
-    
+                  ReloadDataFlag T)
+
 ;Установка правой границы полосы прокрутки
             (dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "MaxValue" _MSItemCount)
 ;Перемещение полосы в начало
@@ -1629,16 +1632,16 @@
 ;Загрузка ссылки на очередной элемент из пространства модели или простраства листа
                 (setq _ReloadItem (vla-item _MSpace ItemIndex))
 ;Обновление, если элемент -- вхождение блока выбранного описания
-                (if (and     (= (vla-get-ObjectName _ReloadItem) _BlockRefObjectName)
-                            (= (vla-get-EffectiveName _ReloadItem) _CurAffectiveName))
+                (if (and (= (vla-get-ObjectName _ReloadItem) _BlockRefObjectName)
+                         (= (vla-get-EffectiveName _ReloadItem) _CurAffectiveName))
 ;Проверка слоя на блокировку
                     (if (= (vla-get-Lock (vla-Item _Layers (vla-get-Layer _ReloadItem))) :vlax-true)    ;then
                         (setq _LockCount (1+ _LockCount))    ;then
                         (progn    ;else
 ;Запись текущего элемента пространства модели
-                            (setq     CurBlockRef _ReloadItem
+                            (setq CurBlockRef _ReloadItem
 ;Обнуление строки записи источника базы данных
-                                    _Str "")
+                                  _Str "")
 ;Инициализация вхождения блока
                             (InitBlock)
 ;Обработка значения ключевого поля
@@ -1647,8 +1650,8 @@
 ;Заполнение атрибутов
                                     (if (= (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_FillErrorCheckBox "Value") 1)
                                         (progn
-                                            (repeat (length CurColumnList) 
-                                                (setq     _Str     (strcat _Str 
+                                            (repeat (length CurColumnList)
+                                                (setq     _Str     (strcat _Str
                                                                     (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_FillErrorTextBox "Text")
                                                                     "\t")))
 ;Очистка таблицы от записанных значений
@@ -1670,9 +1673,9 @@
 ;Заполнение атрибутов
                                             (if (= (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_FillErrorCheckBox "Value") 1)
                                                 (progn
-                                                    (repeat (length CurColumnList) 
-                                                        (setq _Str (strcat 
-                                                                    _Str 
+                                                    (repeat (length CurColumnList)
+                                                        (setq _Str (strcat
+                                                                    _Str
                                                                     (dcl_Control_GetProperty k410odcl_ChoiceRecordDialog_FillErrorTextBox "Text")
                                                                     "\t")))
 ;Очистка таблицы от записанных значений
@@ -1690,7 +1693,7 @@
 ;Перемещение курсора на вычисленную позицию
                                             (vlax-invoke-method CurRecordSet "Move" _KeyPosition 1)
 ;Загрузка строки
-                                            (setq     _Str (vlax-invoke-method CurRecordSet "GetString" 2 1 "\t" "\t" nil))
+                                            (setq _Str (vlax-invoke-method CurRecordSet "GetString" 2 1 "\t" "\t" nil))
 ;Замена в строке повторяющихся последовател    "\t\t" на "\t \t"
                                             (repeat (length CurColumnList) (setq _Str (vl-string-subst "\t \t" "\t\t" _Str)))
 ;Очистка таблицы от записанных значений
@@ -1713,7 +1716,7 @@
                 (dcl_Control_SetProperty k410odcl_ReloadDialog_ProgressBar "Value" ItemIndex)
             )
 ;Сброс флага обновления данных
-            (setq     ReloadDataFlag F
+            (setq ReloadDataFlag F
 ;Восстанвление ссылки на исходное вхождение
                     CurBlockRef _CurRef)
 ;Инициализация вхождения блока
@@ -1738,7 +1741,7 @@
 ;Перемещение курсора на вычисленную позицию
                             (vlax-invoke-method CurRecordSet "Move" _KeyPosition 1)
 ;Загрузка строки
-                            (setq     _Str (vlax-invoke-method CurRecordSet "GetString" 2 1 "\t" "\t" nil))
+                            (setq _Str (vlax-invoke-method CurRecordSet "GetString" 2 1 "\t" "\t" nil))
 ;Замена в строке повторяющихся последовател    "\t\t" на "\t \t"
                             (repeat (length CurColumnList) (setq _Str (vl-string-subst "\t \t" "\t\t" _Str)))
 ;Очистка таблицы от записанных значений
@@ -1750,10 +1753,10 @@
                 )
             )
 ;Результат работы
-            (alert     (strcat "Объектов:        " (itoa ItemIndex) "\n"
-                            "Вхождений:        " (itoa (+ _ReloadCount _LockCount)) "\n"
-                            "Ошибок:            " (itoa _ErrorCount) "\n"
-                            "На блокированных слоях:    " (itoa _LockCount)))
+            (alert (strcat "Объектов:        " (itoa ItemIndex) "\n"
+                           "Вхождений:        " (itoa (+ _ReloadCount _LockCount)) "\n"
+                           "Ошибок:            " (itoa _ErrorCount) "\n"
+                           "На блокированных слоях:    " (itoa _LockCount)))
 ;Сброс указателя элементов, если просмотрены все элементы документа
             (if (= ItemIndex _MSItemCount)
                 (setq ItemIndex 0))
